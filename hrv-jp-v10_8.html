@@ -1,0 +1,1804 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0a0e14;
+  --surface: #111820;
+  --surface2: #1a2332;
+  --border: rgba(100,180,255,0.12);
+  --accent: #4fc3f7;
+  --accent2: #81d4a0;
+  --accent3: #ffb347;
+  --warn: #ff6b6b;
+  --text: #e0eeff;
+  --text2: #7a9cc0;
+  --text3: #3d5a7a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(79,195,247,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,195,247,0.03) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+.app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 16px 12px 60px; }
+
+/* ヘッダー */
+header {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; margin-bottom: 24px; padding: 20px 0 16px;
+  position: relative;
+}
+header::after {
+  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
+  height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+header h1 {
+  font-size: 30px; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #e0eeff 0%, #4fc3f7 50%, #81d4a0 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px;
+}
+header h1 span { -webkit-text-fill-color: transparent; }
+.header-sub {
+  font-size: 11px; color: var(--text3); letter-spacing: 0.2em;
+  font-family: 'DM Mono', monospace; text-transform: uppercase; margin-bottom: 10px;
+}
+.phase-badge {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--accent); background: rgba(79,195,247,0.08);
+  border: 1px solid rgba(79,195,247,0.25); padding: 4px 12px;
+  border-radius: 20px; letter-spacing: 0.1em;
+}
+
+.section { margin-bottom: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+.card-title {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── ガイドボックス ── */
+#guide-box {
+  background: linear-gradient(135deg, rgba(79,195,247,0.07), rgba(129,212,160,0.05));
+  border: 1px solid rgba(79,195,247,0.2);
+  border-radius: 16px; padding: 20px 16px; margin-bottom: 16px;
+  text-align: center; position: relative; overflow: hidden;
+}
+#guide-box::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(79,195,247,0.08), transparent);
+  pointer-events: none;
+}
+#guide-step {
+  font-size: 10px; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.15em; margin-bottom: 10px;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+}
+#guide-main {
+  font-size: 20px; font-weight: 900; color: var(--text);
+  line-height: 1.4; margin-bottom: 10px;
+}
+#guide-sub {
+  font-size: 12px; color: var(--text2); line-height: 1.8;
+  font-family: 'DM Mono', monospace;
+}
+#guide-icon {
+  font-size: 42px; margin-bottom: 10px; display: block;
+  filter: drop-shadow(0 0 12px rgba(79,195,247,0.3));
+}
+
+/* 信号品質インジケーター */
+#quality-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 12px; padding: 10px 12px;
+  background: var(--surface2); border-radius: 8px;
+  border: 1px solid var(--border);
+}
+#quality-icon { font-size: 20px; }
+#quality-text { font-size: 13px; font-weight: 700; flex: 1; }
+#quality-dots { display: flex; gap: 4px; }
+.qdot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+.qdot.on { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+/* カメラ */
+#video-wrap {
+  position: relative; width: 100%; height: 140px;
+  border-radius: 10px; overflow: hidden; background: #000;
+  border: 2px solid var(--border); margin-bottom: 10px;
+}
+#video { width: 100%; height: 100%; object-fit: cover; }
+#finger-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text); text-align: center;
+  background: rgba(0,0,0,0.75); transition: opacity 0.5s;
+  line-height: 1.7; gap: 4px;
+}
+#finger-overlay .fo-icon { font-size: 32px; }
+
+.signal-bar-wrap {
+  height: 90px; background: var(--surface2); border-radius: 10px;
+  overflow: hidden; border: 1px solid rgba(79,195,247,0.15); margin-bottom: 10px;
+  position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+}
+#signal-canvas { width: 100%; height: 100%; display: block; }
+#signal-status {
+  position: absolute; top: 4px; right: 8px;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  color: var(--text3);
+}
+
+.metrics-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.metric-box {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 8px; text-align: center;
+  transition: border-color 0.3s;
+}
+.metric-box .mb-label { font-size: 9px; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.08em; font-family: 'DM Mono', monospace; }
+.metric-box .mb-val { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.metric-box .mb-unit { font-size: 9px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.mb-val.blue { color: var(--accent); }
+.mb-val.green { color: var(--accent2); }
+.mb-val.yellow { color: var(--accent3); }
+
+#start-btn {
+  width: 100%; padding: 16px; background: var(--accent); color: #000;
+  border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 16px; font-weight: 900; cursor: pointer; transition: opacity 0.2s;
+}
+#start-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* スキャン */
+#scan-section { display: none; }
+.scan-progress-info {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.spi-text { font-size: 13px; font-weight: 700; }
+.spi-count { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; }
+.prog-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+.prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.5s; }
+
+#scan-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.scan-cell {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 4px; text-align: center;
+  transition: all 0.4s; position: relative; overflow: hidden;
+}
+.scan-cell.scanning { border-color: var(--accent); background: rgba(79,195,247,0.06); }
+.scan-cell.done { border-color: rgba(129,212,160,0.4); }
+.scan-cell.best { border-color: var(--accent3); background: rgba(255,179,71,0.1); box-shadow: 0 0 16px rgba(255,179,71,0.2); }
+.scan-cell .sc-bpm { font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.scan-cell .sc-unit { font-size: 8px; color: var(--text3); }
+.scan-cell .sc-rmssd { font-size: 9px; color: var(--text2); margin-top: 3px; font-family: 'DM Mono', monospace; }
+.scan-cell .sc-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); }
+.best-tag {
+  position: absolute; top: 2px; right: 2px;
+  font-size: 7px; background: var(--accent3); color: #000;
+  padding: 1px 4px; border-radius: 2px; font-weight: 900;
+}
+
+/* 呼吸ガイド */
+#breath-section { display: none; }
+.breath-center { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+#breath-canvas-wrap { position: relative; width: 200px; height: 200px; }
+#breath-canvas { width: 200px; height: 200px; display: block; }
+#breath-label {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+#breath-phase-text { font-size: 20px; font-weight: 900; color: var(--text); }
+#breath-count-text { font-size: 40px; font-weight: 900; font-family: 'DM Mono', monospace; color: var(--accent); }
+#breath-bpm-text { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+.breath-instruction {
+  width: 100%; background: var(--surface2); border-radius: 10px;
+  padding: 14px; border: 1px solid var(--border);
+}
+.bi-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.bi-desc { font-size: 12px; color: var(--text2); line-height: 1.7; }
+
+.btn-row { display: flex; gap: 8px; width: 100%; }
+.btn-green {
+  flex: 2; padding: 14px; background: var(--accent2); color: #000;
+  border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; font-weight: 900; cursor: pointer;
+}
+.btn-ghost {
+  flex: 1; padding: 14px; background: transparent; color: var(--text2);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 14px; cursor: pointer;
+}
+
+#train-hrv-canvas {
+  width: 100%; height: 60px; background: var(--surface2);
+  border-radius: 8px; border: 1px solid var(--border); display: block;
+}
+
+/* HRV詳細 */
+#hrv-section { display: none; }
+#hrv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.hrv-metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+.hm-label { font-size: 9px; color: var(--text3); }
+.hm-val { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: 2px; }
+.hm-unit { font-size: 9px; color: var(--text3); }
+.hm-val.blue { color: var(--accent); }
+.hm-val.green { color: var(--accent2); }
+.hm-val.yellow { color: var(--accent3); }
+#poincare-canvas { width: 100%; height: 140px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); display: block; }
+
+/* 準備タイムオーバーレイ */
+#prep-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(10,14,20,0.93);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; pointer-events: none;
+}
+#prep-next-bpm {
+  font-size: 13px; font-weight: 700; color: var(--text2);
+  font-family: 'DM Mono', monospace; letter-spacing: 0.1em;
+}
+#prep-main {
+  font-size: 28px; font-weight: 900; color: var(--text);
+  text-align: center; line-height: 1.4;
+}
+#prep-main span { color: var(--accent); }
+#prep-count {
+  font-size: 72px; font-weight: 900;
+  font-family: 'DM Mono', monospace; color: var(--accent);
+  line-height: 1;
+}
+#prep-sub {
+  font-size: 13px; color: var(--text3);
+  font-family: 'DM Mono', monospace; text-align: center; line-height: 1.7;
+}
+#prep-breath-wrap {
+  position: relative; width: 120px; height: 120px;
+}
+#prep-breath-canvas { width: 120px; height: 120px; display: block; }
+#prep-breath-label {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+#prep-phase { font-size: 12px; font-weight: 700; color: var(--text); }
+#prep-sec { font-size: 20px; font-weight: 900; font-family: 'DM Mono', monospace; color: var(--accent); }
+
+/* トースト通知 */
+#toast {
+  display: none;
+  position: fixed;
+  top: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 9999;
+  background: linear-gradient(135deg, rgba(79,195,247,0.95), rgba(129,212,160,0.95));
+  color: #000;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; font-weight: 700;
+  padding: 14px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  text-align: center;
+  line-height: 1.6;
+  white-space: nowrap;
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ログ */
+#log-area {
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3);
+  line-height: 1.8; max-height: 56px; overflow-y: auto;
+  padding-top: 8px; border-top: 1px solid var(--border); margin-top: 10px;
+}
+#log-area p { margin: 0; }
+#log-area p.ok { color: var(--accent2); }
+#log-area p.info { color: var(--text2); }
+#log-area p.warn { color: var(--accent3); }
+</style>
+
+<div class="app">
+  <header>
+    <h1>HRV <span>呼吸</span> トレーナー</h1>
+    <div class="header-sub">Heart Rate Variability · Breath Training</div>
+    <div class="phase-badge" id="phase-badge">準備中</div>
+  </header>
+
+  <!-- ガイドボックス -->
+  <div id="guide-box">
+    <div id="guide-icon">📷</div>
+    <div id="guide-step">ステップ 1 / 4</div>
+    <div id="guide-main">「カメラを開始」を<br>タップしてください</div>
+    <div id="guide-sub">カメラへのアクセスを許可すると<br>心拍の計測が始まります</div>
+  </div>
+
+  <!-- カメラ -->
+  <div class="section">
+    <div class="card" id="camera-card">
+      <div class="card-title">📡 心拍センサー（カメラPPG）</div>
+
+      <div id="video-wrap">
+        <video id="video" playsinline muted autoplay></video>
+        <div id="finger-overlay">
+          <span class="fo-icon">☝️</span>
+          <span>カメラを起動して<br>指先をレンズに当ててください</span>
+        </div>
+
+      </div>
+
+      <div class="signal-bar-wrap">
+        <canvas id="signal-canvas"></canvas>
+        <div id="signal-status">信号待機中</div>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-box">
+          <div class="mb-label">心拍数</div>
+          <div class="mb-val blue" id="hr-disp">--</div>
+          <div class="mb-unit">bpm</div>
+        </div>
+        <div class="metric-box">
+          <div class="mb-label">RMSSD</div>
+          <div class="mb-val green" id="rmssd-disp">--</div>
+          <div class="mb-unit">ms</div>
+        </div>
+        <div class="metric-box">
+          <div class="mb-label">信号品質</div>
+          <div class="mb-val yellow" id="snr-disp">--</div>
+          <div class="mb-unit">dB</div>
+        </div>
+      </div>
+
+      <!-- 品質インジケーター -->
+      <div id="quality-bar">
+        <div id="quality-icon">⚪</div>
+        <div id="quality-text">カメラを起動してください</div>
+        <div id="quality-dots">
+          <div class="qdot" id="qd0"></div>
+          <div class="qdot" id="qd1"></div>
+          <div class="qdot" id="qd2"></div>
+          <div class="qdot" id="qd3"></div>
+          <div class="qdot" id="qd4"></div>
+        </div>
+      </div>
+
+      <div id="log-area"></div>
+      <div style="margin-top:12px">
+        <button id="start-btn" onclick="startCamera()">📷 カメラを開始する</button>
+        <div id="scroll-hint" style="display:none;margin-top:10px;padding:10px;background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;text-align:center;font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;">
+          ↓ 開始後は画面を下にスクロールして<br>呼吸ガイドを確認してください
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- スキャン -->
+  <div class="section" id="scan-section">
+    <div class="card">
+      <div class="card-title">🔍 最適呼吸数スキャン</div>
+      <div class="scan-progress-info">
+        <div class="spi-text" id="scan-status-text">スキャン準備中...</div>
+        <div class="spi-count" id="pt-overall-val">0/8</div>
+      </div>
+      <div class="prog-bar-wrap">
+        <div class="prog-bar-fill" id="scan-prog" style="width:0%"></div>
+      </div>
+      <div id="scan-grid"></div>
+    </div>
+  </div>
+
+  <!-- 呼吸トレーニング -->
+  <div class="section" id="breath-section">
+    <div class="card">
+      <div class="card-title">🫁 呼吸ガイド</div>
+      <div class="breath-center">
+        <div id="breath-canvas-wrap">
+          <canvas id="breath-canvas" width="400" height="400"></canvas>
+          <div id="breath-label">
+            <div id="breath-phase-text">準備中</div>
+            <div id="breath-count-text">--</div>
+            <div id="breath-bpm-text">-- 回/分</div>
+          </div>
+        </div>
+        <div class="breath-instruction">
+          <div class="bi-title" id="train-title">共鳴周波数呼吸法</div>
+          <div class="bi-desc" id="train-desc">スキャン後に最適な呼吸ペースが<br>自動で設定されます。</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-green" id="start-train-btn" onclick="startTraining()">▶ トレーニング開始</button>
+          <button class="btn-ghost" onclick="stopTraining()">■ 停止</button>
+        </div>
+        <canvas id="train-hrv-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- キャリブレーション -->
+  <div class="section" id="calib-section">
+    <div class="card">
+      <div class="card-title">🔧 キャリブレーション（個人基準値）</div>
+      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
+        安静時の心拍変動を基準値として記録します。<br>スキャン前に一度実施すると精度が上がります。
+      </div>
+      <div id="calib-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:10px;">未実施（スキャン前に実施推奨）</div>
+      <button id="calib-btn" onclick="startCalibration()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;">
+        🔧 キャリブレーション開始（30秒）
+      </button>
+    </div>
+  </div>
+
+  <!-- 品質スコア -->
+  <div class="section" id="quality-section">
+    <div class="card">
+      <div class="card-title">📈 計測品質スコア</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+        <div style="text-align:center;min-width:80px;">
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">品質スコア</div>
+          <div id="quality-score-val" style="font-size:42px;font-weight:900;font-family:'DM Mono',monospace;color:var(--text3);">--</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">/ 100</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">アーティファクト率</div>
+          <div id="artifact-rate" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:8px;margin-bottom:4px;">検出ピーク数</div>
+          <div id="peak-count" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+        </div>
+      </div>
+      <div id="quality-warning" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6;margin-bottom:8px;"></div>
+      <div id="autonomic-eval" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);line-height:1.8;"></div>
+    </div>
+  </div>
+
+  <!-- HRV詳細 -->
+  <div class="section" id="hrv-section">
+    <div class="card">
+      <div class="card-title">📊 HRV 詳細データ</div>
+      <div id="hrv-grid">
+        <div class="hrv-metric"><div class="hm-label">RMSSD</div><div class="hm-val blue" id="hm-rmssd">--</div><div class="hm-unit">ms</div></div>
+        <div class="hrv-metric"><div class="hm-label">SDNN</div><div class="hm-val green" id="hm-sdnn">--</div><div class="hm-unit">ms</div></div>
+        <div class="hrv-metric"><div class="hm-label">pNN50</div><div class="hm-val yellow" id="hm-pnn50">--</div><div class="hm-unit">%</div></div>
+        <div class="hrv-metric"><div class="hm-label">LFパワー</div><div class="hm-val blue" id="hm-lf">--</div><div class="hm-unit">ms²</div></div>
+        <div class="hrv-metric"><div class="hm-label">HFパワー</div><div class="hm-val green" id="hm-hf">--</div><div class="hm-unit">ms²</div></div>
+        <div class="hrv-metric"><div class="hm-label">LF/HF比</div><div class="hm-val yellow" id="hm-lfhf">--</div><div class="hm-unit">ratio</div></div>
+      </div>
+      <canvas id="poincare-canvas"></canvas>
+    </div>
+  </div>
+<!-- 全画面 計測中オーバーレイ（自動切替・タップ無効） -->
+<div id="measuring-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(10,14,20,0.93);flex-direction:column;align-items:center;justify-content:center;gap:20px;pointer-events:none;">
+
+  <div style="font-size:13px;font-weight:700;color:#7a9cc0;letter-spacing:0.15em;">心拍計測中</div>
+
+  <!-- 波形表示 -->
+  <div style="width:100%;max-width:320px;height:80px;background:rgba(10,14,20,0.6);border-radius:12px;border:1px solid rgba(79,195,247,0.15);overflow:hidden;position:relative;">
+    <canvas id="mo-wave-canvas" style="width:100%;height:100%;display:block;"></canvas>
+    <div style="position:absolute;top:6px;left:10px;font-size:9px;font-family:'DM Mono',monospace;color:rgba(79,195,247,0.4);letter-spacing:0.1em;">PPG SIGNAL</div>
+  </div>
+
+  <div id="mo-circle" style="width:140px;height:140px;border-radius:50%;border:4px solid #4fc3f7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:rgba(79,195,247,0.06);box-shadow:0 0 30px rgba(79,195,247,0.2);transition:all 0.6s;">
+    <span id="mo-count" style="font-size:56px;font-weight:900;font-family:'DM Mono',monospace;color:#4fc3f7;line-height:1;">30</span>
+    <span style="font-size:11px;color:#3d5a7a;font-family:'DM Mono',monospace;">秒</span>
+  </div>
+
+  <div id="mo-label" style="font-size:18px;font-weight:700;color:#e0eeff;transition:color 0.4s;">信号を取得中...</div>
+
+  <div id="mo-hr" style="font-size:32px;font-weight:900;font-family:'DM Mono',monospace;color:#3d5a7a;transition:color 0.5s;">-- bpm</div>
+
+  <div style="width:220px;height:5px;background:#1a2332;border-radius:3px;overflow:hidden;">
+    <div id="mo-prog" style="height:100%;width:0%;background:linear-gradient(90deg,#4fc3f7,#81d4a0);border-radius:3px;transition:width 0.9s;"></div>
+  </div>
+
+  <div style="font-size:12px;color:#3d5a7a;text-align:center;line-height:1.8;">
+    指先をカメラのレンズに<br>しっかり当てたまま待ってください
+  </div>
+</div>
+</div>
+
+<!-- 準備タイムオーバーレイ -->
+<div id="prep-overlay">
+  <div id="prep-next-bpm">次の呼吸ペース</div>
+  <div id="prep-main">1分間に<span id="prep-bpm-val">--</span>回</div>
+
+  <!-- 徐々に変化する呼吸ガイド -->
+  <div id="prep-breath-wrap">
+    <canvas id="prep-breath-canvas" width="240" height="240"></canvas>
+    <div id="prep-breath-label">
+      <div id="prep-phase">準備中</div>
+      <div id="prep-sec">--</div>
+    </div>
+  </div>
+
+  <div id="prep-count">10</div>
+  <div id="prep-sub">
+    このペースに合わせて<br>呼吸を整えてください
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast"></div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════
+// 定数
+// ══════════════════════════════════════
+const SCAN_BPMS = [4, 5, 6, 6.5, 7]; // 5種類・合計5分
+const SCAN_DURATION = 60;
+const RR_BUF_MAX = 200;
+
+let videoEl, capturing = false;
+let ppgBuf = [], ppgTime = [], lastPeakTime = 0;
+let rrIntervals = [], allRR = [];
+let scanPhase = 'idle', currentScanIdx = 0, scanResults = [], scanRRBuf = [];
+let trainPhase = 'idle', trainBestBpm = 6, trainHrvHistory = [];
+let breathAnimId = null, breathStart = null;
+let readyCountdown = 0, readyTimer = null;
+
+let sigCanvas, sigCtx, poincareCanvas, poincareCtx;
+let moWaveCanvas, moWaveCtx;
+let prepCanvas, prepCtx, prepAnimId = null, prepCurrentBpm = 6, prepTargetBpm = 6;
+let trainHrvCanvas, trainHrvCtx, breathCanvas, breathCtx;
+
+const OFFSCREEN = document.createElement('canvas');
+OFFSCREEN.width = 32; OFFSCREEN.height = 32;
+const OFF_CTX = OFFSCREEN.getContext('2d', { willReadFrequently: true });
+
+// ══════════════════════════════════════
+// 初期化
+// ══════════════════════════════════════
+window.addEventListener('load', () => {
+  videoEl = document.getElementById('video');
+  sigCanvas = document.getElementById('signal-canvas');
+  sigCtx = sigCanvas.getContext('2d');
+  poincareCanvas = document.getElementById('poincare-canvas');
+  poincareCtx = poincareCanvas.getContext('2d');
+  trainHrvCanvas = document.getElementById('train-hrv-canvas');
+  trainHrvCtx = trainHrvCanvas.getContext('2d');
+  breathCanvas = document.getElementById('breath-canvas');
+  breathCtx = breathCanvas.getContext('2d');
+  buildScanGrid();
+  window.addEventListener('resize', resizeCanvases);
+  setTimeout(resizeCanvases, 100);
+
+  // 準備タイムcanvas初期化
+  prepCanvas = document.getElementById('prep-breath-canvas');
+  if (prepCanvas) {
+    prepCtx = prepCanvas.getContext('2d');
+    prepCanvas.width = 240; prepCanvas.height = 240;
+  }
+
+  // 波形オーバーレイcanvas初期化
+  moWaveCanvas = document.getElementById('mo-wave-canvas');
+  if (moWaveCanvas) {
+    moWaveCtx = moWaveCanvas.getContext('2d');
+    const r = moWaveCanvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    moWaveCanvas.width = (r.width || 320) * dpr;
+    moWaveCanvas.height = (r.height || 80) * dpr;
+    moWaveCtx.scale(dpr, dpr);
+  }
+});
+
+function resizeCanvases() {
+  [sigCanvas, poincareCanvas, trainHrvCanvas].forEach(c => {
+    const r = c.getBoundingClientRect();
+    if (r.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    c.width = r.width * dpr;
+    c.height = r.height * dpr;
+    c.getContext('2d').scale(dpr, dpr);
+  });
+}
+
+// ══════════════════════════════════════
+// ガイド表示
+// ══════════════════════════════════════
+function setGuide(step, icon, main, sub) {
+  document.getElementById('guide-step').textContent = step;
+  document.getElementById('guide-icon').textContent = icon;
+  document.getElementById('guide-main').innerHTML = main;
+  document.getElementById('guide-sub').innerHTML = sub;
+}
+
+function updateQuality(snr, hasHR) {
+  const dots = 5;
+  let level = 0;
+  let icon = '⚪', text = '指をカメラに当ててください', color = 'var(--text3)';
+
+  if (!capturing) {
+    icon = '⚪'; text = 'カメラを起動してください'; level = 0;
+  } else if (snr < 2) {
+    icon = '🔴'; text = '指をレンズにしっかり密着させてください'; level = 1; color = 'var(--warn)';
+  } else if (snr < 5) {
+    icon = '🟡'; text = '信号が弱いです。指を強く当ててください'; level = 2; color = 'var(--accent3)';
+  } else if (snr < 8) {
+    icon = '🟡'; text = 'もう少し安定するまで待ってください'; level = 3; color = 'var(--accent3)';
+  } else if (!hasHR) {
+    icon = '🟢'; text = '信号OK！心拍を検出中...'; level = 3; color = 'var(--accent2)';
+  } else {
+    icon = '🟢'; text = '計測準備完了！スキャンを開始できます'; level = 5; color = 'var(--accent2)';
+  }
+
+  document.getElementById('quality-icon').textContent = icon;
+  document.getElementById('quality-text').textContent = text;
+  document.getElementById('quality-text').style.color = color;
+
+  for (let i = 0; i < dots; i++) {
+    const d = document.getElementById(`qd${i}`);
+    d.classList.toggle('on', i < level);
+  }
+  document.getElementById('signal-status').textContent = `SNR: ${snr.toFixed(1)}dB`;
+}
+
+// ══════════════════════════════════════
+// カメラ起動
+// ══════════════════════════════════════
+async function startCamera() {
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true; btn.textContent = '接続中...';
+  log('カメラを起動しています...', 'info');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 320 }, height: { ideal: 240 } }
+    });
+    videoEl.srcObject = stream;
+    await videoEl.play();
+    capturing = true;
+
+    // フラッシュ自動ON
+    try {
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (caps.torch) {
+        await track.applyConstraints({ advanced: [{ torch: true }] });
+        log('💡 フラッシュをONにしました', 'ok');
+      } else {
+        log('⚠️ フラッシュ非対応端末です', 'warn');
+      }
+    } catch(te) {
+      log('⚠️ フラッシュ制御エラー: ' + te.message, 'warn');
+    }
+
+    document.getElementById('finger-overlay').style.opacity = '0.15';
+    document.getElementById('phase-badge').textContent = 'カメラOK';
+    log('カメラ接続完了！', 'ok');
+
+    // ガイド更新
+    setGuide('ステップ 2 / 4', '☝️',
+      '指先をカメラのレンズに<br>しっかり当ててください',
+      '📍 コツ：人差し指の腹でレンズを完全に塞ぐ<br>💡 懐中電灯アプリをONにすると精度UP<br>🔴 映像が真っ赤になればOK');
+
+    btn.textContent = '⏳ 信号安定待ち...';
+    captureLoop();
+    startReadyWait();
+
+  } catch(e) {
+    log('カメラエラー: ' + e.message, 'warn');
+    btn.disabled = false;
+    btn.textContent = '📷 カメラを開始する';
+    setGuide('エラー', '❌', 'カメラを許可してください', 'iPhoneの設定 → Documentsアプリ → カメラ → 許可');
+  }
+}
+
+// ── 準備待ち（requestAnimationFrameベース） ──
+let readyStartTime = 0;
+let readyDone = false;
+const READY_DURATION = 30000; // 30秒
+
+function startReadyWait() {
+  readyDone = false;
+  readyStartTime = performance.now();
+  const overlay = document.getElementById('measuring-overlay');
+  overlay.style.display = 'flex';
+  // rAFループで更新（setIntervalより確実）
+  readyLoop();
+}
+
+function readyLoop() {
+  if (readyDone) return;
+
+  const elapsed = performance.now() - readyStartTime;
+  const remaining = Math.max(0, Math.ceil((READY_DURATION - elapsed) / 1000));
+  const hrv = calcHRV(rrIntervals);
+  const hasHR = hrv && hrv.hr > 40 && hrv.hr < 180;
+
+  // カウントダウン更新
+  document.getElementById('mo-count').textContent = remaining;
+
+  // プログレスバー
+  const pct = Math.min(100, (elapsed / READY_DURATION) * 100);
+  document.getElementById('mo-prog').style.width = pct + '%';
+
+  // HR表示
+  if (hasHR) {
+    document.getElementById('mo-hr').textContent = Math.round(hrv.hr) + ' bpm';
+    document.getElementById('mo-hr').style.color = '#81d4a0';
+    // 円を緑に
+    const circle = document.getElementById('mo-circle');
+    circle.style.borderColor = '#81d4a0';
+    circle.style.background = 'rgba(129,212,160,0.08)';
+    circle.style.boxShadow = '0 0 30px rgba(129,212,160,0.25)';
+    document.getElementById('mo-count').style.color = '#81d4a0';
+  }
+
+  // メッセージ更新
+  const label = document.getElementById('mo-label');
+  if (!hasHR) {
+    label.textContent = '信号を取得中...';
+    label.style.color = '#7a9cc0';
+  } else if (remaining > 15) {
+    label.textContent = '✅ 心拍を検出しました！';
+    label.style.color = '#81d4a0';
+  } else if (remaining > 5) {
+    label.textContent = '✅ 信号が安定しています';
+    label.style.color = '#81d4a0';
+  } else {
+    label.textContent = '🎉 準備ほぼ完了！';
+    label.style.color = '#ffb347';
+  }
+
+  // 完了条件チェック
+  const earlyOK = hasHR && rrIntervals.length >= 10;
+  const timeOK = elapsed >= READY_DURATION;
+
+  if (earlyOK || timeOK) {
+    readyDone = true;
+    onReadyComplete();
+    return;
+  }
+
+  // 次フレームへ（約200msに1回更新で十分）
+  setTimeout(readyLoop, 200);
+}
+
+function onReadyComplete() {
+  const btn = document.getElementById('start-btn');
+  const overlay = document.getElementById('measuring-overlay');
+  // 完了表示に変える
+  const circle = document.getElementById('mo-circle');
+  circle.style.borderColor = '#81d4a0';
+  circle.style.background = 'rgba(129,212,160,0.12)';
+  document.getElementById('mo-count').textContent = '✓';
+  document.getElementById('mo-count').style.fontSize = '48px';
+  document.getElementById('mo-count').style.color = '#81d4a0';
+  document.getElementById('mo-label').textContent = '準備完了！';
+  document.getElementById('mo-label').style.color = '#81d4a0';
+  document.getElementById('mo-prog').style.width = '100%';
+
+  setTimeout(() => {
+    // オーバーレイを閉じる
+    overlay.style.display = 'none';
+
+    // ボタンをスキャン開始に
+    btn.disabled = false;
+    btn.textContent = '🔍 スキャン開始！';
+    btn.onclick = startScan;
+
+    // ガイド更新
+    setGuide('ステップ 3 / 4', '✅',
+      '準備完了！<br>スキャンを開始してください',
+      '「スキャン開始」を押すと<br>8種類の呼吸ペースを各60秒ずつ計測します<br>合計約8分かかります<br><br>📌 スキャン中は画面を下にスクロールすると<br>呼吸ガイドが表示されます');
+    log('準備完了！スキャンを開始できます。', 'ok');
+
+    // スキャングリッドをフェードイン表示
+    const scanSec = document.getElementById('scan-section');
+    scanSec.style.display = 'block';
+    scanSec.style.opacity = '0';
+    scanSec.style.transition = 'opacity 0.6s';
+    setTimeout(() => { scanSec.style.opacity = '1'; }, 50);
+
+    document.getElementById('hrv-section').style.display = 'block';
+
+    // 呼吸の円まで自動スクロール
+    setTimeout(() => {
+      const breathCircle = document.getElementById('breath-canvas-wrap');
+      if (breathCircle) {
+        breathCircle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 800);
+  }, 1000);
+}
+
+// ══════════════════════════════════════
+// PPGキャプチャ
+// ══════════════════════════════════════
+// ── 信号処理状態 ──
+let frameCount = 0;
+let prevRaw = 0, dcBlock = 0;
+
+// ── サンプリングレート管理 ──
+const TARGET_FS = 30;           // 目標サンプリング周波数(Hz)
+const TARGET_INTERVAL = 1000 / TARGET_FS;  // 33.3ms間隔（実質40ms以上でサンプリング）
+let lastSampleTime = 0;         // 最後にサンプリングした時刻
+let sampleCount = 0;            // サンプル数
+let fsEstimate = 30;            // 実測サンプリングレート
+
+// ── バターワースフィルター係数（4次 BPF = 2次×2段カスケード） ──
+// 設計: fs=30Hz
+// 1段目: 0.5〜3.5Hz（心拍30〜210bpm）
+const BW_B1 = [0.235616, 0.0, -0.235616];
+const BW_A1 = [1, -1.471195, 0.528767];
+// 2段目: 0.7〜3.0Hz（心拍42〜180bpm、さらに絞る）
+const BW_B2 = [0.190568, 0.0, -0.190568];
+const BW_A2 = [1, -1.545981, 0.618865];
+
+let bwX1 = [0, 0, 0], bwY1 = [0, 0, 0];  // 1段目の履歴
+let bwX2 = [0, 0, 0], bwY2 = [0, 0, 0];  // 2段目の履歴
+
+// ── Pan-Tompkins 本格実装 ──
+let signalLevel = 0;   // 信号レベル
+let noiseLevel = 0;    // ノイズレベル
+let threshold1 = 0;    // 第1閾値（メイン）
+let threshold2 = 0;    // 第2閾値（バックサーチ用）
+let rPeakAmps = [];    // 検出ピーク振幅履歴
+let ptPeakBuffer = []; // ピーク候補バッファ
+let lastRRInterval = 0;// 直前のRR間隔
+let rrMeanEstimate = 860; // RR間隔の推定平均（初期値860ms≒70bpm）
+
+// ── キャリブレーション状態 ──
+let calibPhase = 'none';  // none | running | done
+let calibRR = [];         // キャリブレーション時のRR
+let calibBaseline = null; // 基準値 {rmssd, hr, sdnn}
+
+// ── 品質スコア ──
+let qualityScore = 0;     // 0〜100
+let qualityHistory = [];  // 品質履歴
+let artifactCount = 0;    // アーティファクト検出数
+let totalPeaks = 0;       // 総ピーク数
+
+function captureLoop() {
+  if (!capturing) return;
+  requestAnimationFrame(captureLoop);
+  if (videoEl.readyState < 2) return;
+
+  // ── サンプリングレート制御 ──
+  // iPhoneの実際のfpsに関わらず、33ms間隔でサンプリング
+  const now = performance.now();
+  if (now - lastSampleTime < TARGET_INTERVAL * 0.9) return; // 早すぎる場合スキップ（負荷軽減）
+  const actualInterval = lastSampleTime > 0 ? now - lastSampleTime : TARGET_INTERVAL;
+  lastSampleTime = now;
+
+  // 実測サンプリングレートを推定（移動平均）
+  sampleCount++;
+  if (sampleCount > 10) {
+    fsEstimate = 0.95 * fsEstimate + 0.05 * (1000 / actualInterval);
+    fsEstimate = Math.max(10, Math.min(60, fsEstimate)); // 10-60Hzに制限
+  }
+
+  // 中央16x16ピクセル取得
+  OFF_CTX.drawImage(videoEl, 0, 0, 32, 32);
+  const data = OFF_CTX.getImageData(8, 8, 16, 16).data;
+
+  let r = 0, g = 0, cnt = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    r += data[i]; g += data[i+1]; cnt++;
+  }
+  r /= cnt; g /= cnt;
+
+  // 自動チャンネル選択（赤飽和時は緑を使用）
+  const raw = (r > 200) ? g : r;
+
+  // ── DCブロッカー（ベースライン除去） ──
+  const dcAlpha = 0.995;
+  dcBlock = dcAlpha * dcBlock + (raw - prevRaw);
+  prevRaw = raw;
+
+  // ── バターワース2次BPFを適用 ──
+  const filtered = applyButterworth(dcBlock);
+
+  ppgBuf.push(filtered);
+  ppgTime.push(performance.now());
+  if (ppgBuf.length > 300) { ppgBuf.shift(); ppgTime.shift(); }
+
+  // 正規化
+  const norm = normalize(ppgBuf);
+
+  // Pan-Tompkins風ピーク検出
+  detectPeaksPT(norm, ppgTime);
+
+  // SNR計算
+  const snr = estimateSNR(norm);
+
+  // スキャン中のRR収集
+  if (scanPhase === 'scanning' && rrIntervals.length > 0) {
+    const latest = rrIntervals[rrIntervals.length - 1];
+    if (scanRRBuf.length === 0 || scanRRBuf[scanRRBuf.length - 1] !== latest) {
+      scanRRBuf.push(latest);
+    }
+  }
+
+  frameCount++;
+  if (frameCount % 6 === 0) {
+    drawSignal(norm, snr);
+    const hrv = calcHRV(rrIntervals);
+    const hasHR = hrv && hrv.hr > 30 && hrv.hr < 200;
+    updateQuality(snr, hasHR);
+    if (hrv) {
+      document.getElementById('hr-disp').textContent = Math.round(hrv.hr);
+      document.getElementById('rmssd-disp').textContent = Math.round(hrv.rmssd);
+    }
+    document.getElementById('snr-disp').textContent = snr.toFixed(1);
+    document.getElementById('signal-status').textContent =
+      `SNR:${snr.toFixed(1)}dB  ${Math.round(fsEstimate)}fps  4次BPF`;
+  }
+  if (frameCount % 30 === 0) drawHRVDetail();
+}
+
+// ── バターワース4次フィルター適用（2段カスケードIIR） ──
+function applyButterworth(x) {
+  // 1段目
+  bwX1[2] = bwX1[1]; bwX1[1] = bwX1[0]; bwX1[0] = x;
+  bwY1[2] = bwY1[1]; bwY1[1] = bwY1[0];
+  bwY1[0] = BW_B1[0]*bwX1[0] + BW_B1[2]*bwX1[2]
+           - BW_A1[1]*bwY1[1] - BW_A1[2]*bwY1[2];
+
+  // 2段目（1段目の出力を入力として使用）
+  const y1 = bwY1[0];
+  bwX2[2] = bwX2[1]; bwX2[1] = bwX2[0]; bwX2[0] = y1;
+  bwY2[2] = bwY2[1]; bwY2[1] = bwY2[0];
+  bwY2[0] = BW_B2[0]*bwX2[0] + BW_B2[2]*bwX2[2]
+           - BW_A2[1]*bwY2[1] - BW_A2[2]*bwY2[2];
+
+  return bwY2[0];
+}
+
+function normalize(buf) {
+  if (buf.length < 2) return buf;
+  // 最近90フレーム（約3秒）の範囲で正規化（局所正規化）
+  const win = buf.slice(-90);
+  const mn = Math.min(...win), mx = Math.max(...win);
+  if (mx === mn) return buf.map(() => 0.5);
+  return buf.map(v => Math.max(0, Math.min(1, (v - mn) / (mx - mn))));
+}
+
+// ── 本格 Pan-Tompkins アルゴリズム ──
+let ptRefractory = 0;
+const PT_FS = 30; // サンプリングレート
+
+function detectPeaksPT(norm, times) {
+  if (norm.length < 12) return;
+  const i = norm.length - 4;
+  if (i < 6) return;
+
+  const v = norm[i];
+  const t = times[i];
+
+  // 初期化
+  if (signalLevel === 0 && v > 0) {
+    signalLevel = v * 0.8;
+    noiseLevel  = v * 0.3;
+    threshold1  = noiseLevel + 0.25 * (signalLevel - noiseLevel);
+    threshold2  = 0.5 * threshold1;
+  }
+
+  // 不応期チェック（直前RRの20%または200ms、いずれか大きい方）
+  const refractoryMs = Math.max(200, lastRRInterval * 0.2);
+  const refractoryFrames = Math.ceil(refractoryMs / (1000/PT_FS));
+  ptRefractory = Math.max(0, ptRefractory - 1);
+  if (ptRefractory > 0) {
+    noiseLevel = 0.875*noiseLevel + 0.125*v;
+    threshold1 = noiseLevel + 0.25*(signalLevel - noiseLevel);
+    threshold2 = 0.5 * threshold1;
+    return;
+  }
+
+  // 局所最大チェック（前後各3点）
+  const isLocalMax = v > norm[i-1] && v > norm[i-2] && v > norm[i-3]
+                  && v >= norm[i+1] && v >= norm[i+2] && v >= norm[i+3];
+
+  if (!isLocalMax) {
+    noiseLevel = 0.875*noiseLevel + 0.125*v;
+    threshold1 = noiseLevel + 0.25*(signalLevel - noiseLevel);
+    threshold2 = 0.5 * threshold1;
+    return;
+  }
+
+  // ピーク候補をバッファに追加
+  ptPeakBuffer.push({v, t, i});
+  if (ptPeakBuffer.length > 8) ptPeakBuffer.shift();
+
+  if (v >= threshold1) {
+    // 第1閾値超え → 確定ピーク
+    acceptPeak(v, t);
+  } else if (v >= threshold2 && lastRRInterval > 0) {
+    // 第2閾値超え → 長いRR後のバックサーチ
+    const elapsed = t - lastPeakTime;
+    if (elapsed > 1.66 * rrMeanEstimate) {
+      // 見逃しピークの可能性 → 候補から最大を選ぶ
+      const best = ptPeakBuffer.reduce((a,b) => a.v > b.v ? a : b);
+      if (best.t > lastPeakTime) acceptPeak(best.v, best.t);
+    }
+  } else {
+    noiseLevel = 0.875*noiseLevel + 0.125*v;
+    threshold1 = noiseLevel + 0.25*(signalLevel - noiseLevel);
+    threshold2 = 0.5 * threshold1;
+  }
+}
+
+function acceptPeak(v, t) {
+  totalPeaks++;
+  const interval = lastPeakTime > 0 ? t - lastPeakTime : 0;
+
+  if (interval > 0) {
+    // 生理的範囲チェック（500ms〜1400ms = 43〜120bpm）
+    // 安静時を想定して上限を120bpmに制限（誤検出防止）
+    if (interval >= 500 && interval <= 1400) {
+      // RR補間：外れ値を検出して補間
+      const isValid = validateRR(interval);
+      if (isValid) {
+        rrIntervals.push(interval);
+        allRR.push(interval);
+        if (rrIntervals.length > RR_BUF_MAX) rrIntervals.shift();
+        lastRRInterval = interval;
+        rrMeanEstimate = 0.875*rrMeanEstimate + 0.125*interval;
+        // キャリブレーション中はcalibRRにも追加
+        if (calibPhase === 'running') calibRR.push(interval);
+      } else {
+        // 外れ値：補間RRを挿入
+        artifactCount++;
+        const interpolated = interpolateRR(interval);
+        if (interpolated) {
+          rrIntervals.push(interpolated);
+          allRR.push(interpolated);
+          if (rrIntervals.length > RR_BUF_MAX) rrIntervals.shift();
+        }
+      }
+    }
+  }
+
+  // 信号レベル・閾値更新
+  signalLevel = 0.875*signalLevel + 0.125*v;
+  threshold1  = noiseLevel + 0.25*(signalLevel - noiseLevel);
+  threshold2  = 0.5 * threshold1;
+  lastPeakTime = t;
+  ptRefractory = Math.ceil(200 / (1000/PT_FS)); // 200ms不応期
+  updateQualityScore();
+}
+
+// RR間隔の妥当性チェック（強化版）
+function validateRR(rr) {
+  if (rrIntervals.length < 3) return true;
+  const recent = rrIntervals.slice(-6);
+  const sorted = [...recent].sort((a,b)=>a-b);
+  // 中央値ベースで比較（平均より外れ値に強い）
+  const median = sorted[Math.floor(sorted.length/2)];
+  const dev = Math.abs(rr - median) / median;
+  // 20%以上の偏差はアーティファクト
+  return dev < 0.20;
+}
+
+// RR間隔の補間（前後の平均値で補間）
+function interpolateRR(rr) {
+  if (rrIntervals.length < 2) return null;
+  const prev = rrIntervals[rrIntervals.length-1];
+  const pprev = rrIntervals[rrIntervals.length-2];
+  return (prev + pprev) / 2;
+}
+
+// 品質スコア更新（0〜100）
+function updateQualityScore() {
+  if (totalPeaks < 5) { qualityScore = 0; return; }
+  const artifactRate = artifactCount / totalPeaks;
+  const rrCount = rrIntervals.length;
+  const snrOk = document.getElementById('snr-disp').textContent > 6;
+
+  // スコア計算
+  let score = 100;
+  score -= artifactRate * 200;      // アーティファクト率ペナルティ
+  score -= Math.max(0, 20 - rrCount) * 2; // RR数不足ペナルティ
+  qualityScore = Math.max(0, Math.min(100, Math.round(score)));
+  qualityHistory.push(qualityScore);
+  if (qualityHistory.length > 30) qualityHistory.shift();
+  updateQualityDisplay();
+}
+
+// 品質表示更新
+function updateQualityDisplay() {
+  const el = document.getElementById('quality-score-val');
+  if (!el) return;
+  el.textContent = qualityScore;
+  let color = qualityScore >= 80 ? '#81d4a0'
+            : qualityScore >= 50 ? '#ffb347' : '#ff6b6b';
+  el.style.color = color;
+
+  // アーティファクト率
+  const artRate = totalPeaks > 0 ? (artifactCount/totalPeaks*100).toFixed(1) : '--';
+  const artEl = document.getElementById('artifact-rate');
+  if (artEl) artEl.textContent = `${artRate}%`;
+
+  // ピーク数
+  const pkEl = document.getElementById('peak-count');
+  if (pkEl) pkEl.textContent = `${totalPeaks} 拍`;
+
+  // 警告メッセージ
+  const warn = document.getElementById('quality-warning');
+  if (warn) {
+    if (qualityScore < 50) {
+      warn.innerHTML = '⚠️ <strong>信頼性が低い</strong>可能性があります。<br>指をしっかり当て直してください。';
+      warn.style.color = 'var(--warn)';
+    } else if (qualityScore < 80) {
+      warn.innerHTML = '📊 信頼性は<strong>普通</strong>です。指をより強く当てると改善します。';
+      warn.style.color = 'var(--accent3)';
+    } else {
+      warn.innerHTML = '✅ 信頼性が<strong>高い</strong>計測です。';
+      warn.style.color = 'var(--accent2)';
+    }
+    warn.style.display = 'block';
+  }
+
+  // 自律神経評価（キャリブレーション済みの場合）
+  const hrv = calcHRV(rrIntervals);
+  if (hrv) {
+    const eval_ = getCalibAdjustedScore(hrv);
+    const evalEl = document.getElementById('autonomic-eval');
+    if (evalEl) {
+      let evalText = `🧠 自律神経評価: <strong>${hrv.lfhf < 1.0 ? '副交感神経優位（リラックス）' : hrv.lfhf < 2.0 ? 'バランス良好' : '交感神経優位（緊張）'}</strong>`;
+      if (eval_ && calibBaseline) {
+        const rmssdDiff = hrv.rmssd - calibBaseline.rmssd;
+        evalText += `<br>基準値比較: RMSSD ${rmssdDiff > 0 ? '+' : ''}${Math.round(rmssdDiff)}ms`;
+        evalText += `<br>${Math.abs(rmssdDiff) < 5 ? '🟢 安静時と同程度' : rmssdDiff > 0 ? '🟢 安静時より良好' : '🔴 安静時より低下'}`;
+      }
+      evalEl.innerHTML = evalText;
+      evalEl.style.display = 'block';
+    }
+  }
+}
+
+function estimateSNR(norm) {
+  if (norm.length < 60) return 0;
+  const s = norm.slice(-60);
+  const mean = s.reduce((a,b)=>a+b,0)/s.length;
+  const sig = Math.max(...s) - Math.min(...s);
+  const noise = Math.sqrt(s.reduce((a,v)=>a+(v-mean)**2,0)/s.length) + 0.001;
+  return Math.min(30, 20*Math.log10(sig/noise));
+}
+
+// ══════════════════════════════════════
+// HRV計算
+// ══════════════════════════════════════
+function calcHRV(rr) {
+  if (!rr || rr.length < 4) return null;
+
+  // 外れ値除去：中央値±20%の範囲のみ使用（強化）
+  const sorted = [...rr].sort((a,b)=>a-b);
+  const median = sorted[Math.floor(sorted.length/2)];
+  // 生理的範囲も同時チェック（500ms〜1400ms）
+  const filtered = rr.filter(v =>
+    Math.abs(v-median)/median < 0.20 && v >= 500 && v <= 1400
+  );
+  if (filtered.length < 4) return null;
+  rr = filtered;
+
+  let ssq = 0;
+  for (let i=1;i<rr.length;i++) ssq += (rr[i]-rr[i-1])**2;
+  const rmssd = Math.sqrt(ssq/(rr.length-1));
+  const mean = rr.reduce((a,b)=>a+b,0)/rr.length;
+  const sdnn = Math.sqrt(rr.reduce((a,v)=>a+(v-mean)**2,0)/rr.length);
+  let nn50=0;
+  for (let i=1;i<rr.length;i++) if(Math.abs(rr[i]-rr[i-1])>50) nn50++;
+  const pnn50=(nn50/(rr.length-1))*100;
+  const {lf,hf}=calcLFHF(rr,mean);
+  return { rmssd, sdnn, pnn50, lf, hf, lfhf: hf>0?lf/hf:0, hr: 60000/mean };
+}
+
+// ── ウェルチ法による周波数解析 ──
+function calcLFHF(rr, meanRR) {
+  if (rr.length < 16) return {lf:0, hf:0};
+
+  // 1. 等間隔リサンプリング（4Hz）
+  const fs = 4;
+  const dur = rr.reduce((a,b)=>a+b,0) / 1000;
+  const N = Math.floor(dur * fs);
+  if (N < 16) return {lf:0, hf:0};
+
+  const interp = [];
+  let tAcc = 0, ri = 0;
+  for (let n = 0; n < N; n++) {
+    const t = n / fs;
+    while (ri < rr.length-1 && tAcc + rr[ri]/1000 < t) {
+      tAcc += rr[ri]/1000; ri++;
+    }
+    // 線形補間
+    if (ri > 0 && ri < rr.length) {
+      const t0 = tAcc, t1 = tAcc + rr[ri]/1000;
+      const alpha = t1 > t0 ? (t - t0) / (t1 - t0) : 0;
+      interp.push(rr[ri-1] * (1-alpha) + rr[ri] * alpha);
+    } else {
+      interp.push(rr[ri] || meanRR);
+    }
+  }
+
+  // 2. トレンド除去（線形デトレンド）
+  const xmean = (N-1)/2;
+  let sxy=0, sxx=0;
+  for (let i=0;i<N;i++){sxy+=(i-xmean)*interp[i];sxx+=(i-xmean)**2;}
+  const slope = sxx>0?sxy/sxx:0;
+  const intercept = interp.reduce((a,b)=>a+b,0)/N - slope*xmean;
+  const detrended = interp.map((v,i) => v - (slope*i + intercept));
+
+  // 3. ウェルチ法（セグメント分割・ハニング窓・重複50%）
+  const segLen = Math.min(64, Math.floor(N/2));
+  const overlap = Math.floor(segLen/2);
+  const step = segLen - overlap;
+  const numSegs = Math.floor((N - overlap) / step);
+  if (numSegs < 1) return {lf:0, hf:0};
+
+  // ハニング窓
+  const hann = Array.from({length:segLen}, (_,i) => 0.5*(1-Math.cos(2*Math.PI*i/(segLen-1))));
+  const hannPow = hann.reduce((a,v)=>a+v*v,0);
+
+  // パワースペクトル密度の平均
+  const psd = new Array(Math.floor(segLen/2)+1).fill(0);
+
+  for (let s=0; s<numSegs; s++) {
+    const start = s * step;
+    const seg = detrended.slice(start, start+segLen);
+    if (seg.length < segLen) break;
+
+    // ハニング窓を適用してDFT
+    for (let k=0; k<=segLen/2; k++) {
+      let re=0, im=0;
+      for (let n=0;n<segLen;n++) {
+        const angle = 2*Math.PI*k*n/segLen;
+        re += seg[n]*hann[n]*Math.cos(angle);
+        im -= seg[n]*hann[n]*Math.sin(angle);
+      }
+      // パワー正規化
+      const pw = (re*re + im*im) / (fs * hannPow);
+      psd[k] += pw;
+    }
+  }
+
+  // セグメント数で平均
+  for (let k=0; k<psd.length; k++) psd[k] /= numSegs;
+
+  // 4. LF・HF積分
+  let lf=0, hf=0;
+  for (let k=1; k<psd.length; k++) {
+    const freq = k * fs / segLen;
+    if (freq >= 0.04 && freq < 0.15) lf += psd[k] * (fs/segLen);
+    if (freq >= 0.15 && freq < 0.40) hf += psd[k] * (fs/segLen);
+  }
+
+  return {lf: lf, hf: hf};
+}
+
+// ══════════════════════════════════════
+// 描画
+// ══════════════════════════════════════
+function drawSignal(norm, snr) {
+  const w=sigCanvas.offsetWidth, h=sigCanvas.offsetHeight;
+  sigCtx.clearRect(0,0,w,h);
+  if (norm.length<2) return;
+  const show=norm.slice(-150);
+  const ok=snr>6;
+
+  // グリッド線
+  sigCtx.strokeStyle='rgba(79,195,247,0.06)';
+  sigCtx.lineWidth=1;
+  [0.25,0.5,0.75].forEach(y=>{
+    sigCtx.beginPath();
+    sigCtx.moveTo(0,h*y);sigCtx.lineTo(w,h*y);sigCtx.stroke();
+  });
+
+  // 中央線
+  sigCtx.strokeStyle='rgba(79,195,247,0.12)';
+  sigCtx.beginPath();sigCtx.moveTo(0,h*0.5);sigCtx.lineTo(w,h*0.5);sigCtx.stroke();
+
+  // 波形（振幅を80%に拡大して見やすく）
+  const margin = h * 0.1;
+  const amp = h - margin * 2;
+  sigCtx.strokeStyle=ok?'#4fc3f7':'#ff6b6b';
+  sigCtx.lineWidth=2.5;
+  sigCtx.shadowColor=ok?'rgba(79,195,247,0.7)':'rgba(255,107,107,0.6)';
+  sigCtx.shadowBlur=8;
+  sigCtx.beginPath();
+  show.forEach((v,i)=>{
+    const x=(i/(show.length-1))*w;
+    const y=margin + amp*(1-v);
+    i===0?sigCtx.moveTo(x,y):sigCtx.lineTo(x,y);
+  });
+  sigCtx.stroke();
+  sigCtx.shadowBlur=0;
+
+  // ピーク点を赤丸でマーク
+  sigCtx.fillStyle='rgba(255,100,100,0.8)';
+  for(let i=2;i<show.length-2;i++){
+    const v=show[i];
+    const localMax=Math.max(...show.slice(Math.max(0,i-5),Math.min(show.length,i+5)));
+    if(v>0.6&&v===localMax&&v>show[i-1]&&v>show[i+1]){
+      const x=(i/(show.length-1))*w;
+      const y=margin+amp*(1-v);
+      sigCtx.beginPath();sigCtx.arc(x,y,3,0,Math.PI*2);sigCtx.fill();
+    }
+  }
+
+  // 状態テキスト
+  sigCtx.fillStyle=ok?'rgba(79,195,247,0.6)':'rgba(255,107,107,0.6)';
+  sigCtx.font='10px DM Mono';
+  sigCtx.fillText(ok?'● 信号良好':'● 信号弱い', 6, 14);
+
+  // オーバーレイの波形も同時に描画
+  drawOverlayWave(norm, snr);
+}
+
+function drawOverlayWave(norm, snr) {
+  if (!moWaveCanvas || !moWaveCtx) return;
+  const w = moWaveCanvas.offsetWidth || 320;
+  const h = moWaveCanvas.offsetHeight || 80;
+  moWaveCtx.clearRect(0, 0, w, h);
+  if (norm.length < 2) return;
+
+  const show = norm.slice(-120);
+  const ok = snr > 6;
+
+  // 背景グラデーション
+  const bgGrad = moWaveCtx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, 'rgba(79,195,247,0.03)');
+  bgGrad.addColorStop(1, 'transparent');
+  moWaveCtx.fillStyle = bgGrad;
+  moWaveCtx.fillRect(0, 0, w, h);
+
+  // グリッド
+  moWaveCtx.strokeStyle = 'rgba(79,195,247,0.08)';
+  moWaveCtx.lineWidth = 1;
+  moWaveCtx.beginPath();
+  moWaveCtx.moveTo(0, h/2); moWaveCtx.lineTo(w, h/2);
+  moWaveCtx.stroke();
+
+  // 波形塗りつぶし（グラデーション）
+  const fillGrad = moWaveCtx.createLinearGradient(0, 0, 0, h);
+  if (ok) {
+    fillGrad.addColorStop(0, 'rgba(79,195,247,0.25)');
+    fillGrad.addColorStop(1, 'rgba(79,195,247,0)');
+  } else {
+    fillGrad.addColorStop(0, 'rgba(255,107,107,0.2)');
+    fillGrad.addColorStop(1, 'rgba(255,107,107,0)');
+  }
+
+  const margin = h * 0.08;
+  const amp = h - margin * 2;
+
+  moWaveCtx.beginPath();
+  show.forEach((v, i) => {
+    const x = (i / (show.length - 1)) * w;
+    const y = margin + amp * (1 - v);
+    i === 0 ? moWaveCtx.moveTo(x, y) : moWaveCtx.lineTo(x, y);
+  });
+  moWaveCtx.lineTo(w, h); moWaveCtx.lineTo(0, h);
+  moWaveCtx.closePath();
+  moWaveCtx.fillStyle = fillGrad;
+  moWaveCtx.fill();
+
+  // 波形ライン（太く・明るく）
+  moWaveCtx.beginPath();
+  show.forEach((v, i) => {
+    const x = (i / (show.length - 1)) * w;
+    const y = margin + amp * (1 - v);
+    i === 0 ? moWaveCtx.moveTo(x, y) : moWaveCtx.lineTo(x, y);
+  });
+  moWaveCtx.strokeStyle = ok ? '#4fc3f7' : '#ff6b6b';
+  moWaveCtx.lineWidth = 2.5;
+  moWaveCtx.shadowColor = ok ? 'rgba(79,195,247,0.8)' : 'rgba(255,107,107,0.7)';
+  moWaveCtx.shadowBlur = 10;
+  moWaveCtx.stroke();
+  moWaveCtx.shadowBlur = 0;
+}
+
+function drawHRVDetail() {
+  const hrv=calcHRV(rrIntervals);
+  if (!hrv) return;
+  document.getElementById('hm-rmssd').textContent=Math.round(hrv.rmssd);
+  document.getElementById('hm-sdnn').textContent=Math.round(hrv.sdnn);
+  document.getElementById('hm-pnn50').textContent=hrv.pnn50.toFixed(1);
+  document.getElementById('hm-lf').textContent=Math.round(hrv.lf);
+  document.getElementById('hm-hf').textContent=Math.round(hrv.hf);
+  document.getElementById('hm-lfhf').textContent=hrv.lfhf.toFixed(2);
+  drawPoincare();
+}
+
+function drawPoincare() {
+  const rr=rrIntervals.slice(-60);
+  if (rr.length<4) return;
+  const w=poincareCanvas.offsetWidth, h=poincareCanvas.offsetHeight;
+  poincareCtx.clearRect(0,0,w,h);
+  const mn=Math.min(...rr)-30, mx=Math.max(...rr)+30;
+  const sc=v=>(v-mn)/(mx-mn);
+  poincareCtx.strokeStyle='rgba(79,195,247,0.1)';
+  poincareCtx.lineWidth=1;
+  poincareCtx.beginPath();poincareCtx.moveTo(0,h);poincareCtx.lineTo(w,0);poincareCtx.stroke();
+  for(let i=0;i<rr.length-1;i++){
+    const x=sc(rr[i])*w, y=(1-sc(rr[i+1]))*h;
+    const age=i/rr.length;
+    poincareCtx.fillStyle=`rgba(79,195,247,${0.2+age*0.8})`;
+    poincareCtx.beginPath();poincareCtx.arc(x,y,2+age*2,0,Math.PI*2);poincareCtx.fill();
+  }
+}
+
+// ══════════════════════════════════════
+// スキャングリッド
+// ══════════════════════════════════════
+function buildScanGrid() {
+  const grid=document.getElementById('scan-grid');
+  grid.innerHTML='';
+  SCAN_BPMS.forEach((bpm,i)=>{
+    const cell=document.createElement('div');
+    cell.className='scan-cell'; cell.id=`sc-${i}`;
+    cell.innerHTML=`
+      <div class="sc-bpm">${bpm}</div>
+      <div class="sc-unit">回/分</div>
+      <div class="sc-rmssd" id="sc-rmssd-${i}">待機</div>
+      <div class="sc-bar" id="sc-bar-${i}" style="width:0%"></div>`;
+    grid.appendChild(cell);
+  });
+}
+
+// ══════════════════════════════════════
+// スキャン実行
+// ══════════════════════════════════════
+async function startScan() {
+  const btn=document.getElementById('start-btn');
+  btn.disabled=true; btn.textContent='スキャン中...';
+  document.getElementById('phase-badge').textContent='スキャン中';
+  document.getElementById('scan-section').style.display='block';
+  document.getElementById('breath-section').style.display='block';
+  document.getElementById('hrv-section').style.display='block';
+  setTimeout(resizeCanvases, 100);
+
+  // スキャンセクションを完全表示（opacity解除）
+  document.getElementById('scan-section').style.opacity = '1';
+  document.getElementById('breath-section').style.display = 'block';
+
+  // カメラカードをコンパクトに縮小して画面を切替
+  document.getElementById('camera-card').style.transition = 'all 0.5s';
+  document.getElementById('camera-card').style.padding = '10px';
+  document.getElementById('video-wrap').style.height = '70px';
+  document.getElementById('video-wrap').style.width = '90px';
+  document.getElementById('video-wrap').style.display = 'inline-block';
+
+  // ②ボタン下のヒントを表示
+  document.getElementById('scroll-hint').style.display = 'block';
+
+  // ③トースト通知（3秒表示）
+  showToast('↓ 画面を下にスクロールして<br>呼吸ガイドを確認してください', 4000);
+
+  scanPhase='scanning'; scanResults=[]; currentScanIdx=0;
+  await runNextScan();
+}
+
+async function runNextScan() {
+  if (currentScanIdx>=SCAN_BPMS.length){finishScan();return;}
+  const bpm=SCAN_BPMS[currentScanIdx];
+
+  // 最初以外は10秒の準備タイム
+  if (currentScanIdx > 0) {
+    await showPrepTime(bpm, SCAN_BPMS[currentScanIdx-1]);
+  }
+
+  const cell=document.getElementById(`sc-${currentScanIdx}`);
+  cell.className='scan-cell scanning';
+  document.getElementById('pt-overall-val').textContent=`${currentScanIdx+1}/5`;
+  document.getElementById('scan-status-text').textContent=`計測中: ${bpm}回/分の呼吸`;
+
+  setGuide(`スキャン ${currentScanIdx+1}/5`, '🫁',
+    `${bpm}回/分で<br>呼吸してください`,
+    '丸が大きくなったら吸い、小さくなったら吐きます<br>このペースで60秒間呼吸してください');
+
+  log(`スキャン開始: ${bpm}回/分`, 'info');
+  scanRRBuf = [];
+  animateBreath(bpm);
+
+  await countdown(SCAN_DURATION, (elapsed) => {
+    const pct=(elapsed/SCAN_DURATION)*100;
+    document.getElementById(`sc-bar-${currentScanIdx}`).style.width=pct+'%';
+    const remain=Math.ceil(SCAN_DURATION-elapsed);
+
+    document.getElementById('scan-status-text').textContent=
+      `${bpm}回/分 計測中... あと${remain}秒`;
+
+    document.getElementById('scan-prog').style.width=
+      ((currentScanIdx+elapsed/SCAN_DURATION)/SCAN_BPMS.length*100)+'%';
+  });
+
+  const hrv=calcHRV(scanRRBuf.length>4?scanRRBuf:null);
+  const result=hrv||{rmssd:0,sdnn:0,pnn50:0,lf:0,hf:0,lfhf:0};
+  result.bpm=bpm; scanResults.push(result);
+
+  cell.className='scan-cell done';
+  const rmssdText=result.rmssd>0?`${Math.round(result.rmssd)}ms`:'--';
+  document.getElementById(`sc-rmssd-${currentScanIdx}`).textContent=rmssdText;
+  document.getElementById(`sc-bar-${currentScanIdx}`).style.width='100%';
+
+  const best=scanResults.filter(r=>r.rmssd>0).reduce((a,b)=>a.rmssd>b.rmssd?a:b, {rmssd:0,bpm:0});
+  log(`完了: ${bpm}回/分 → RMSSD ${Math.round(result.rmssd)}ms`, 'ok');
+
+  currentScanIdx++;
+  await sleep(500);
+  runNextScan();
+}
+
+// ── 即切り替え（シンプル・自然） ──
+function showPrepTime(nextBpm, prevBpm) {
+  return Promise.resolve(); // 待機なし・即切り替え
+}
+
+function finishScan() {
+  if (breathAnimId) cancelAnimationFrame(breathAnimId);
+  scanPhase='done';
+
+  const validResults=scanResults.filter(r=>r.rmssd>0);
+  const best=validResults.length>0
+    ? validResults.reduce((a,b)=>a.rmssd>b.rmssd?a:b)
+    : {bpm:6, rmssd:0};
+  trainBestBpm=best.bpm;
+
+  scanResults.forEach((r,i)=>{
+    if(r.bpm===best.bpm && r.rmssd>0){
+      const c=document.getElementById(`sc-${i}`);
+      c.className='scan-cell best';
+      c.innerHTML+=`<div class="best-tag">最適</div>`;
+    }
+  });
+
+  document.getElementById('phase-badge').textContent='完了';
+  document.getElementById('scan-status-text').textContent='スキャン完了！';
+  document.getElementById('pt-overall-val').textContent='8/8';
+  document.getElementById('scan-prog').style.width='100%';
+
+  document.getElementById('train-title').textContent=`最適呼吸ペース：${best.bpm}回/分`;
+  document.getElementById('train-desc').innerHTML=
+    `あなたのHRVが最大になった呼吸ペースは<br><strong>${best.bpm}回/分</strong>（RMSSD: ${Math.round(best.rmssd)}ms）<br><br>「トレーニング開始」を押して<br>丸のアニメーションに合わせて呼吸しましょう。`;
+
+  setGuide('ステップ 4 / 4', '🎉',
+    `最適な呼吸数は\n${best.bpm}回/分です！`,
+    `トレーニング開始ボタンを押して\n丸のアニメーションに合わせて呼吸してください`);
+
+  log(`✅ 5種類スキャン完了！最適: ${best.bpm}回/分 (RMSSD: ${Math.round(best.rmssd)}ms)`, 'ok');
+
+  // スキャン完了後も呼吸の円へスクロール
+  setTimeout(() => {
+    const breathCircle = document.getElementById('breath-canvas-wrap');
+    if (breathCircle) {
+      breathCircle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 600);
+
+  const btn=document.getElementById('start-btn');
+  btn.disabled=false;
+  btn.textContent='🔄 再スキャン';
+  btn.onclick=startScan;
+  animateBreath(best.bpm);
+}
+
+// ══════════════════════════════════════
+// 呼吸アニメーション
+// ══════════════════════════════════════
+function animateBreath(bpm) {
+  if (breathAnimId) cancelAnimationFrame(breathAnimId);
+  const cycle=60/bpm, inhale=cycle*0.45, exhale=cycle*0.45, hold=cycle*0.05;
+  breathStart=performance.now();
+  document.getElementById('breath-bpm-text').textContent=`${bpm} 回/分`;
+
+  function frame(now) {
+    const t=((now-breathStart)/1000)%cycle;
+    let phase,progress,color;
+    if(t<inhale){phase='吸う';progress=t/inhale;color='#4fc3f7';}
+    else if(t<inhale+hold){phase='保持';progress=1;color='#ffb347';}
+    else if(t<inhale+hold+exhale){phase='吐く';progress=1-(t-inhale-hold)/exhale;color='#81d4a0';}
+    else{phase='保持';progress=0;color='#ffb347';}
+
+    document.getElementById('breath-phase-text').textContent=phase;
+    const rem=Math.max(1,Math.ceil(
+      phase==='吸う'?inhale-t:
+      phase==='吐く'?inhale+hold+exhale-t:1
+    ));
+    document.getElementById('breath-count-text').textContent=rem;
+    drawBreathCircle(progress,color);
+    breathAnimId=requestAnimationFrame(frame);
+  }
+  breathAnimId=requestAnimationFrame(frame);
+}
+
+function drawBreathCircle(progress,color) {
+  const c=breathCanvas,ctx=breathCtx,W=400,H=400;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2,cy=H/2,maxR=160,minR=70;
+  const r=minR+(maxR-minR)*progress;
+
+  // 背景リング
+  ctx.beginPath();ctx.arc(cx,cy,maxR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(79,195,247,0.06)';ctx.lineWidth=1;ctx.stroke();
+
+  // グロー
+  const grad=ctx.createRadialGradient(cx,cy,r*0.3,cx,cy,r);
+  grad.addColorStop(0,color+'44');grad.addColorStop(1,color+'00');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+
+  // メイン円
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle=color;ctx.lineWidth=3;
+  ctx.shadowColor=color;ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+
+  // 進捗アーク
+  ctx.beginPath();
+  ctx.arc(cx,cy,maxR+14,-Math.PI/2,-Math.PI/2+Math.PI*2*progress);
+  ctx.strokeStyle=color;ctx.lineWidth=4;ctx.stroke();
+}
+
+// ══════════════════════════════════════
+// トレーニング
+// ══════════════════════════════════════
+function startTraining() {
+  if (!capturing){log('カメラを先に起動してください','warn');return;}
+  trainPhase='running'; trainHrvHistory=[];
+  document.getElementById('start-train-btn').disabled=true;
+  log(`トレーニング開始: ${trainBestBpm}回/分`, 'ok');
+  animateBreath(trainBestBpm);
+  trainLoop();
+}
+
+function trainLoop() {
+  if(trainPhase!=='running')return;
+  setTimeout(trainLoop,5000);
+  const hrv=calcHRV(rrIntervals.slice(-30));
+  if(hrv){
+    trainHrvHistory.push(hrv.rmssd);
+    document.getElementById('rmssd-disp').textContent=Math.round(hrv.rmssd);
+    drawTrainHrv();
+  }
+}
+
+function drawTrainHrv() {
+  const vals=trainHrvHistory;
+  if(vals.length<2)return;
+  const w=trainHrvCanvas.offsetWidth, h=trainHrvCanvas.offsetHeight;
+  trainHrvCtx.clearRect(0,0,w,h);
+  const mx=Math.max(...vals,10);
+  trainHrvCtx.strokeStyle='#81d4a0';trainHrvCtx.lineWidth=2;
+  trainHrvCtx.beginPath();
+  vals.forEach((v,i)=>{
+    const x=(i/(vals.length-1))*w, y=h-(v/mx)*h*0.8-4;
+    i===0?trainHrvCtx.moveTo(x,y):trainHrvCtx.lineTo(x,y);
+  });
+  trainHrvCtx.stroke();
+  trainHrvCtx.fillStyle='#81d4a0';
+  trainHrvCtx.font='bold 10px DM Mono';
+  trainHrvCtx.fillText(`RMSSD: ${Math.round(vals[vals.length-1])}ms`, 4, 14);
+}
+
+function stopTraining() {
+  trainPhase='idle';
+  if(breathAnimId){cancelAnimationFrame(breathAnimId);breathAnimId=null;}
+  document.getElementById('start-train-btn').disabled=false;
+  document.getElementById('breath-phase-text').textContent='停止中';
+  document.getElementById('breath-count-text').textContent='--';
+  breathCtx.clearRect(0,0,400,400);
+  log('トレーニングを停止しました。','info');
+}
+
+// ══════════════════════════════════════
+// ユーティリティ
+// ══════════════════════════════════════
+// ── キャリブレーション ──
+function startCalibration() {
+  calibPhase = 'running';
+  calibRR = [];
+  artifactCount = 0;
+  totalPeaks = 0;
+  qualityScore = 0;
+  log('🔧 キャリブレーション開始（30秒間安静にしてください）', 'info');
+
+  const btn = document.getElementById('calib-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '計測中... 30秒'; }
+
+  let count = 30;
+  const timer = setInterval(() => {
+    count--;
+    if (btn) btn.textContent = `計測中... ${count}秒`;
+    if (count <= 0) {
+      clearInterval(timer);
+      finishCalibration();
+    }
+  }, 1000);
+}
+
+function finishCalibration() {
+  calibPhase = 'done';
+  const hrv = calcHRV(calibRR.length > 4 ? calibRR : rrIntervals);
+  if (hrv) {
+    calibBaseline = {
+      rmssd: hrv.rmssd,
+      hr: hrv.hr,
+      sdnn: hrv.sdnn,
+      lf: hrv.lf,
+      hf: hrv.hf,
+      lfhf: hrv.lfhf
+    };
+    log(`✅ キャリブレーション完了！基準値 HR:${Math.round(hrv.hr)}bpm RMSSD:${Math.round(hrv.rmssd)}ms`, 'ok');
+    document.getElementById('calib-status').textContent =
+      `基準値: HR ${Math.round(hrv.hr)}bpm / RMSSD ${Math.round(hrv.rmssd)}ms`;
+    document.getElementById('calib-status').style.color = 'var(--accent2)';
+  }
+  const btn = document.getElementById('calib-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '🔧 再キャリブレーション'; }
+}
+
+// キャリブレーション補正後のHRV評価
+function getCalibAdjustedScore(hrv) {
+  if (!calibBaseline || !hrv) return null;
+  return {
+    rmssdDelta: hrv.rmssd - calibBaseline.rmssd,
+    hrDelta: hrv.hr - calibBaseline.hr,
+    lfhfDelta: hrv.lfhf - calibBaseline.lfhf,
+    autonomicBalance: hrv.lfhf < 1.0 ? '副交感神経優位（リラックス）'
+                    : hrv.lfhf < 2.0 ? 'バランス良好'
+                    : '交感神経優位（緊張・ストレス）'
+  };
+}
+
+// ── トースト通知 ──
+function showToast(msg, duration = 3000) {
+  const toast = document.getElementById('toast');
+  toast.innerHTML = msg;
+  toast.style.display = 'block';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.4s';
+    setTimeout(() => {
+      toast.style.display = 'none';
+      toast.style.opacity = '1';
+      toast.style.transition = '';
+    }, 400);
+  }, duration);
+}
+
+function countdown(duration,onTick){
+  return new Promise(resolve=>{
+    let start=null;
+    function tick(now){
+      if(!start)start=now;
+      const e=(now-start)/1000;
+      onTick(e);
+      if(e<duration)requestAnimationFrame(tick);
+      else resolve();
+    }
+    requestAnimationFrame(tick);
+  });
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function log(msg,type='info'){
+  const area=document.getElementById('log-area');
+  const p=document.createElement('p');
+  p.className=type;
+  const n=new Date();
+  const ts=`${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+  p.textContent=`[${ts}] ${msg}`;
+  area.appendChild(p);
+  area.scrollTop=area.scrollHeight;
+}
+</script>
