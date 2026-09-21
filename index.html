@@ -439,6 +439,19 @@ header h1 span { -webkit-text-fill-color: transparent; }
   position: absolute; top: -7px; right: -3px; font-size: 13px;
 }
 
+/* 中止ボタン */
+.abort-btn {
+  width: 100%; padding: 13px; margin-top: 12px;
+  background: rgba(255,107,107,0.10);
+  color: var(--warn);
+  border: 1.5px solid rgba(255,107,107,0.35);
+  border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.abort-btn:active { transform: scale(0.98); background: rgba(255,107,107,0.18); }
+
 /* トースト通知 */
 #toast {
   display: none;
@@ -485,7 +498,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
   <div id="guide-box">
     <div id="guide-icon">📷</div>
     <div id="guide-step">ステップ 1 / 4</div>
-    <div id="guide-main">「カメラを開始」を<br>タップしてください</div>
+    <div id="guide-main">共鳴周波数を計測するには<br>「カメラを開始して計測する」を<br>タップしてください</div>
     <div id="guide-sub">カメラへのアクセスを許可すると<br>心拍の計測が始まります</div>
   </div>
 
@@ -566,7 +579,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
 
       <div id="log-area"></div>
       <div style="margin-top:12px">
-        <button id="start-btn" onclick="startCamera()">📷 カメラを開始する</button>
+        <button id="start-btn" onclick="startCamera()">📷 カメラを開始して計測する</button>
         <div id="scroll-hint" style="display:none;margin-top:10px;padding:10px;background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;text-align:center;font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;">
           ↓ 開始後は画面を下にスクロールして<br>呼吸ガイドを確認してください
         </div>
@@ -577,7 +590,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
   <!-- スキャン -->
   <div class="section" id="scan-section">
     <div class="card">
-      <div class="card-title">🔍 最適呼吸数スキャン</div>
+      <div class="card-title">🔍 最適呼吸数スキャン（各2分）</div>
       <div class="scan-progress-info">
         <div class="spi-text" id="scan-status-text">スキャン準備中...</div>
         <div class="spi-count" id="pt-overall-val">0/8</div>
@@ -586,6 +599,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
         <div class="prog-bar-fill" id="scan-prog" style="width:0%"></div>
       </div>
       <div id="scan-grid"></div>
+      <button class="abort-btn" id="abort-scan-btn" style="display:none" onclick="abortScan()">■ 計測を中止する</button>
     </div>
   </div>
 
@@ -656,7 +670,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
         </div>
         <div class="btn-row">
           <button class="btn-green" id="start-train-btn" onclick="startTraining()">▶ トレーニング開始</button>
-          <button class="btn-ghost" onclick="stopTraining()">■ 停止</button>
+          <button class="btn-ghost" onclick="abortTraining()" style="color:var(--warn);border-color:rgba(255,107,107,0.35);">■ 中止</button>
         </div>
         <canvas id="train-hrv-canvas"></canvas>
       </div>
@@ -782,13 +796,14 @@ header h1 span { -webkit-text-fill-color: transparent; }
 // 定数
 // ══════════════════════════════════════
 const SCAN_BPMS = [7, 6.5, 6, 5.5, 5]; // 7→5回/分の降順・各60秒・合計5分
-const SCAN_DURATION = 60;
+const SCAN_DURATION = 120;  // 各2分・5種類で合計10分
 const RR_BUF_MAX = 200;
 
 let videoEl, capturing = false;
 let ppgBuf = [], ppgTime = [], lastPeakTime = 0;
 let rrIntervals = [], allRR = [];
 let scanPhase = 'idle', currentScanIdx = 0, scanResults = [], scanRRBuf = [];
+let scanAborted = false;   // 計測の中止フラグ
 let trainPhase = 'idle', trainBestBpm = 6, trainHrvHistory = [];
 let breathAnimId = null, breathStart = null;
 let readyCountdown = 0, readyTimer = null;
@@ -938,7 +953,7 @@ async function startCamera() {
   } catch(e) {
     log('カメラエラー: ' + e.message, 'warn');
     btn.disabled = false;
-    btn.textContent = '📷 カメラを開始する';
+    btn.textContent = '📷 カメラを開始して計測する';
     setGuide('エラー', '❌', 'カメラを許可してください', 'iPhoneの設定 → Documentsアプリ → カメラ → 許可');
   }
 }
@@ -1040,7 +1055,7 @@ function onReadyComplete() {
     // ガイド更新
     setGuide('ステップ 3 / 4', '✅',
       '準備完了！<br>スキャンを開始してください',
-      '「スキャン開始」を押すと<br>8種類の呼吸ペースを各60秒ずつ計測します<br>合計約8分かかります<br><br>📌 スキャン中は画面を下にスクロールすると<br>呼吸ガイドが表示されます');
+      '「スキャン開始」を押すと<br>5種類の呼吸ペースを各2分ずつ計測します<br>合計約10分かかります<br><br>📌 スキャン中は画面を下にスクロールすると<br>呼吸ガイドが表示されます');
     log('準備完了！スキャンを開始できます。', 'ok');
 
     // スキャングリッドをフェードイン表示
@@ -1726,10 +1741,86 @@ async function startScan() {
   showToast('↓ 画面を下にスクロールして<br>呼吸ガイドを確認してください', 4000);
 
   scanPhase='scanning'; scanResults=[]; currentScanIdx=0;
+  scanAborted = false;                                      // 中止フラグをリセット
+  document.getElementById('abort-scan-btn').style.display = 'block';
   await runNextScan();
 }
 
+// ── 計測を中止する ──
+function abortScan() {
+  if (scanPhase !== 'scanning') return;
+  scanAborted = true;
+  scanPhase = 'idle';
+
+  // 呼吸アニメーションを止める
+  if (breathAnimId) { cancelAnimationFrame(breathAnimId); breathAnimId = null; }
+  if (breathCtx) breathCtx.clearRect(0, 0, 400, 400);
+  const ph = document.getElementById('breath-phase-text');
+  const ct = document.getElementById('breath-count-text');
+  if (ph) ph.textContent = '中止しました';
+  if (ct) ct.textContent = '--';
+
+  // 開始カウントダウンが出ていたら閉じる
+  const cd = document.getElementById('scan-countdown');
+  if (cd) cd.style.display = 'none';
+
+  // UIを元に戻す
+  document.getElementById('abort-scan-btn').style.display = 'none';
+  document.getElementById('scan-status-text').innerHTML = '⏹ 計測を中止しました';
+  document.getElementById('scan-status-text').className = 'spi-text';
+  document.getElementById('scan-prog').style.width = '0%';
+  document.getElementById('phase-badge').textContent = '中止';
+
+  // 進行中だったセルを元に戻す
+  const cell = document.getElementById('sc-' + currentScanIdx);
+  if (cell) {
+    cell.className = 'scan-cell';
+    const r = document.getElementById('sc-rmssd-' + currentScanIdx);
+    if (r) r.textContent = '待機';
+    const b = document.getElementById('sc-bar-' + currentScanIdx);
+    if (b) b.style.width = '0%';
+  }
+
+  // カメラカードを元のサイズに戻す
+  const card = document.getElementById('camera-card');
+  if (card) card.style.padding = '16px';
+  const vw = document.getElementById('video-wrap');
+  if (vw) { vw.style.height = '140px'; vw.style.width = '100%'; vw.style.display = 'block'; }
+
+  // ボタンを元に戻す
+  const btn = document.getElementById('start-btn');
+  btn.disabled = false;
+  btn.textContent = '🔍 もう一度スキャンする';
+  btn.onclick = startScan;
+
+  const hint = document.getElementById('scroll-hint');
+  if (hint) hint.style.display = 'none';
+
+  setGuide('計測を中止しました', '⏹',
+    '途中で中止しました',
+    'もう一度計測するか<br>上の「すぐにトレーニング」から<br>好きなペースで練習できます');
+
+  log('⏹ 計測を中止しました', 'warn');
+  showToast('⏹ 計測を中止しました', 2500);
+
+  // 上のペース選択まで戻す
+  setTimeout(() => {
+    const t = document.getElementById('train-only-section');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 400);
+}
+
+// ── トレーニングを中止する ──
+function abortTraining() {
+  stopTraining();
+  const evalEl = document.getElementById('train-only-autonomic');
+  if (evalEl) evalEl.style.display = 'none';
+  showToast('⏹ トレーニングを中止しました', 2500);
+  log('⏹ トレーニングを中止しました', 'warn');
+}
+
 async function runNextScan() {
+  if (scanAborted) return;                                  // 中止された
   if (currentScanIdx>=SCAN_BPMS.length){finishScan();return;}
   const bpm=SCAN_BPMS[currentScanIdx];
 
@@ -1739,6 +1830,7 @@ async function runNextScan() {
   } else {
     await showPrepTime(bpm, SCAN_BPMS[currentScanIdx-1]);
   }
+  if (scanAborted) return;                                  // 中止された
 
   const cell=document.getElementById(`sc-${currentScanIdx}`);
   cell.className='scan-cell scanning';
@@ -1747,7 +1839,7 @@ async function runNextScan() {
 
   setGuide(`スキャン ${currentScanIdx+1}/5`, '🫁',
     `${bpm}回/分で<br>呼吸してください`,
-    '丸が大きくなったら吸い、小さくなったら吐きます<br>このペースで60秒間呼吸してください');
+    '丸が大きくなったら吸い、小さくなったら吐きます<br>このペースで2分間呼吸してください');
 
   log(`スキャン開始: ${bpm}回/分`, 'info');
   scanRRBuf = [];
@@ -1778,6 +1870,8 @@ async function runNextScan() {
       ((currentScanIdx+elapsed/SCAN_DURATION)/SCAN_BPMS.length*100)+'%';
   });
 
+  if (scanAborted) return;                                  // 計測中に中止された
+
   const hrv=calcHRV(scanRRBuf.length>4?scanRRBuf:null);
   const result=hrv||{rmssd:0,sdnn:0,pnn50:0,lf:0,hf:0,lfhf:0};
   result.bpm=bpm; scanResults.push(result);
@@ -1792,6 +1886,7 @@ async function runNextScan() {
 
   currentScanIdx++;
   await sleep(500);
+  if (scanAborted) return;
   runNextScan();
 }
 
@@ -1864,11 +1959,6 @@ function selectPace(bpm) {
   // トレーニング実行中ならその場でペースを切り替える
   if (trainPhase === 'running') {
     animateBreath(bpm);
-    if (typeof fsGuideActive !== 'undefined' && fsGuideActive) {
-      const fsBpmEl = document.getElementById('fs-bpm-text');
-      if (fsBpmEl) fsBpmEl.textContent = bpm + ' 回/分';
-      animateFsBreath(bpm);
-    }
     showToast('🫁 ' + bpm + '回/分 に切り替えました', 2000);
   }
 }
@@ -2024,6 +2114,7 @@ function showScanCountdown(bpm) {
     numEl.style.color = 'var(--accent)';
 
     const timer = setInterval(() => {
+      if (scanAborted) { clearInterval(timer); overlay.style.display = 'none'; resolve(); return; }
       count--;
       if (count > 0) {
         numEl.textContent = count;
@@ -2064,6 +2155,7 @@ function finishScan() {
     }
   });
 
+  document.getElementById('abort-scan-btn').style.display = 'none';
   document.getElementById('phase-badge').textContent='完了';
   document.getElementById('scan-status-text').textContent='スキャン完了！';
   document.getElementById('pt-overall-val').textContent='8/8';
@@ -2282,11 +2374,12 @@ function countdown(duration,onTick){
   return new Promise(resolve=>{
     let start=null;
     function tick(now){
+      if (scanAborted) { resolve('aborted'); return; }   // 中止された
       if(!start)start=now;
       const e=(now-start)/1000;
       onTick(e);
       if(e<duration)requestAnimationFrame(tick);
-      else resolve();
+      else resolve('done');
     }
     requestAnimationFrame(tick);
   });
