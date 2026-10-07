@@ -227,6 +227,9 @@ header h1 span { -webkit-text-fill-color: transparent; }
   border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif;
   font-size: 14px; font-weight: 900; cursor: pointer;
 }
+.btn-green:disabled {
+  opacity: 0.35; cursor: not-allowed;
+}
 .btn-ghost {
   flex: 1; padding: 14px; background: transparent; color: var(--text2);
   border: 1px solid var(--border); border-radius: 10px;
@@ -239,7 +242,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
 }
 
 /* HRV詳細 */
-#hrv-section { display: none; }
+/* 詳細画面内は常時表示（画面切替で制御） */
 #hrv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 .hrv-metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
 .hm-label { font-size: 9px; color: var(--text3); }
@@ -493,7 +496,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
 #toast {
   display: none;
   position: fixed;
-  top: 20px; left: 50%; transform: translateX(-50%);
+  bottom: 88px; left: 50%; transform: translateX(-50%);
   z-index: 9999;
   background: linear-gradient(135deg, rgba(79,195,247,0.95), rgba(129,212,160,0.95));
   color: #000;
@@ -504,11 +507,11 @@ header h1 span { -webkit-text-fill-color: transparent; }
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   text-align: center;
   line-height: 1.6;
-  white-space: nowrap;
+  max-width: 86%;
   animation: toastIn 0.3s ease;
 }
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
@@ -522,6 +525,89 @@ header h1 span { -webkit-text-fill-color: transparent; }
 #log-area p.ok { color: var(--accent2); }
 #log-area p.info { color: var(--text2); }
 #log-area p.warn { color: var(--accent3); }
+
+/* ===== 画面切替 ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* 戻るバー */
+.screen-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.back-btn {
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 14px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.96); }
+.screen-title { font-size: 16px; font-weight: 900; color: var(--text); }
+
+/* ホーム画面の大ボタン */
+.home-btn {
+  display: block; width: 100%; text-align: left;
+  border-radius: 16px; padding: 20px;
+  margin-bottom: 12px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: transform 0.12s;
+  border: 1.5px solid;
+}
+.home-btn:active { transform: scale(0.985); }
+.home-btn .hb-title { font-size: 19px; font-weight: 900; margin-bottom: 4px; }
+.home-btn .hb-sub {
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  line-height: 1.6; opacity: 0.85;
+}
+.home-btn.primary {
+  background: linear-gradient(135deg, rgba(79,195,247,0.14), rgba(79,195,247,0.06));
+  border-color: rgba(79,195,247,0.4); color: var(--accent);
+}
+.home-btn.primary .hb-sub { color: var(--text2); }
+.home-btn.secondary {
+  background: linear-gradient(135deg, rgba(129,212,160,0.14), rgba(129,212,160,0.06));
+  border-color: rgba(129,212,160,0.4); color: var(--accent2);
+}
+.home-btn.secondary .hb-sub { color: var(--text2); }
+
+/* ホームの解説 */
+.explain-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; margin-top: 22px;
+}
+.explain-card h3 {
+  font-size: 15px; font-weight: 900; color: var(--text);
+  margin-bottom: 10px;
+}
+.explain-card p {
+  font-size: 13px; color: var(--text2); line-height: 1.9;
+  margin-bottom: 14px;
+}
+.explain-card p:last-child { margin-bottom: 0; }
+.explain-card strong { color: var(--accent); font-weight: 700; }
+.explain-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 10px;
+}
+.explain-step .es-num {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(79,195,247,0.15); color: var(--accent);
+  font-size: 11px; font-weight: 900; font-family: 'DM Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.explain-step .es-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.detail-link {
+  display: block; width: 100%; margin-top: 16px; padding: 13px;
+  background: transparent; color: var(--text3);
+  border: 1px solid var(--border); border-radius: 12px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer;
+}
+.note-small {
+  font-size: 11px; color: var(--text3); line-height: 1.8;
+  font-family: 'DM Mono', monospace; text-align: center; margin-top: 18px;
+}
 </style>
 
 <div class="app">
@@ -531,6 +617,75 @@ header h1 span { -webkit-text-fill-color: transparent; }
     <div class="phase-badge" id="phase-badge">準備中</div>
   </header>
 
+  <!-- ══════ ホーム画面 ══════ -->
+  <div class="screen active" id="screen-home">
+
+    <button class="home-btn primary" onclick="goExplore()">
+      <div class="hb-title">🔍 最適呼吸数をさがす</div>
+      <div class="hb-sub">カメラで心拍を計測しながら<br>5種類の呼吸ペースを試します（約10分）</div>
+    </button>
+
+    <button class="home-btn secondary" onclick="goTrain()">
+      <div class="hb-title">🫁 トレーニングする</div>
+      <div class="hb-sub" id="home-train-sub">好きなペースを選んで<br>すぐに共鳴呼吸を始めます</div>
+    </button>
+
+    <div class="explain-card">
+      <h3>共鳴呼吸とは</h3>
+      <p>
+        ゆっくりした呼吸に合わせて心拍が大きく揺れる現象を<strong>心拍変動（HRV）</strong>といいます。
+        この揺れが最も大きくなる呼吸ペースが人それぞれにあり、
+        これを<strong>共鳴周波数</strong>と呼びます。
+      </p>
+      <p>
+        自分の共鳴周波数で呼吸を続けると、<strong>迷走神経のはたらきが高まり</strong>、
+        自律神経のバランスが整いやすくなります。
+        一般には1分間に4〜7回程度ですが、個人差があります。
+      </p>
+
+      <h3 style="margin-top:18px;">使い方</h3>
+      <div class="explain-step">
+        <div class="es-num">1</div>
+        <div class="es-text">はじめに<strong>「最適呼吸数をさがす」</strong>で、自分の共鳴周波数を調べます</div>
+      </div>
+      <div class="explain-step">
+        <div class="es-num">2</div>
+        <div class="es-text">見つかったペースで<strong>「トレーニングする」</strong>を毎日続けます</div>
+      </div>
+      <div class="explain-step">
+        <div class="es-num">3</div>
+        <div class="es-text">1回10〜20分、朝晩おこなうのがおすすめです</div>
+      </div>
+
+      <h3 style="margin-top:18px;">計測のコツ</h3>
+      <div class="explain-step">
+        <div class="es-num">◎</div>
+        <div class="es-text">スマホ背面のカメラに<strong>人差し指の腹を密着</strong>させます</div>
+      </div>
+      <div class="explain-step">
+        <div class="es-num">◎</div>
+        <div class="es-text">ライトは自動で点灯します。指は<strong>動かさず</strong>固定してください</div>
+      </div>
+      <div class="explain-step">
+        <div class="es-num">◎</div>
+        <div class="es-text">画面の映像が<strong>赤く</strong>なっていれば正しく当たっています</div>
+      </div>
+    </div>
+
+    <button class="detail-link" onclick="goDetail()">📊 詳細データ・キャリブレーション</button>
+
+    <div class="note-small">
+      このアプリは健康管理を目的としたもので<br>医療機器ではありません
+    </div>
+  </div>
+
+  <!-- ══════ 最適呼吸数をさがす ══════ -->
+  <div class="screen" id="screen-explore">
+    <div class="screen-bar">
+      <button class="back-btn" onclick="goHomeScreen()">← ホーム</button>
+      <div class="screen-title">最適呼吸数をさがす</div>
+    </div>
+
   <!-- ガイドボックス -->
   <div id="guide-box">
     <div id="guide-icon">📷</div>
@@ -539,90 +694,8 @@ header h1 span { -webkit-text-fill-color: transparent; }
     <div id="guide-sub">カメラへのアクセスを許可すると<br>心拍の計測が始まります</div>
   </div>
 
-  <!-- すぐにトレーニング（ペース選択） -->
-  <div class="section" id="train-only-section">
-    <div class="card" style="border-color:rgba(129,212,160,0.3);background:rgba(129,212,160,0.05);">
-      <div class="card-title">⚡ すぐにトレーニング（スキャン不要）</div>
-      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
-        呼吸ペースを選んで、すぐに<br>共鳴呼吸トレーニングを始められます
-      </div>
 
-      <!-- ペース選択 -->
-      <div class="pace-picker" id="pace-picker"></div>
-
-      <div style="text-align:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;">
-        選択中: <strong style="color:var(--accent2);font-size:15px;" id="pace-selected-label">6.0</strong> 回 / 分
-        <span id="pace-crown-note" style="display:none;"><br>👑 = 前回のスキャンで最適だったペース</span>
-      </div>
-
-      <button onclick="startTrainOnlyMode()" style="width:100%;padding:14px;background:var(--accent2);color:#000;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">
-        ▶ このペースでトレーニング開始
-      </button>
-
-      <!-- 自律神経評価（トレーニング中リアルタイム更新） -->
-      <div id="train-only-autonomic" style="display:none;margin-top:12px;font-size:12px;font-family:'DM Mono',monospace;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);line-height:1.8;"></div>
-    </div>
-  </div>
-
-  <!-- カメラ -->
-  <div class="section">
-    <div class="card" id="camera-card">
-      <div class="card-title">📡 心拍センサー（カメラPPG）</div>
-
-      <div id="video-wrap">
-        <video id="video" playsinline muted autoplay></video>
-        <div id="finger-overlay">
-          <span class="fo-icon">☝️</span>
-          <span>カメラを起動して<br>指先をレンズに当ててください</span>
-        </div>
-
-      </div>
-
-      <div class="signal-bar-wrap">
-        <canvas id="signal-canvas"></canvas>
-        <div id="signal-status">信号待機中</div>
-      </div>
-
-      <div class="metrics-row">
-        <div class="metric-box">
-          <div class="mb-label">心拍数</div>
-          <div class="mb-val blue" id="hr-disp">--</div>
-          <div class="mb-unit">bpm</div>
-        </div>
-        <div class="metric-box">
-          <div class="mb-label">RMSSD</div>
-          <div class="mb-val green" id="rmssd-disp">--</div>
-          <div class="mb-unit">ms</div>
-        </div>
-        <div class="metric-box">
-          <div class="mb-label">信号品質</div>
-          <div class="mb-val yellow" id="snr-disp">--</div>
-          <div class="mb-unit">dB</div>
-        </div>
-      </div>
-
-      <!-- 品質インジケーター -->
-      <div id="quality-bar">
-        <div id="quality-icon">⚪</div>
-        <div id="quality-text">カメラを起動してください</div>
-        <div id="quality-dots">
-          <div class="qdot" id="qd0"></div>
-          <div class="qdot" id="qd1"></div>
-          <div class="qdot" id="qd2"></div>
-          <div class="qdot" id="qd3"></div>
-          <div class="qdot" id="qd4"></div>
-        </div>
-      </div>
-
-      <div id="log-area"></div>
-      <div style="margin-top:12px">
-        <button id="start-btn" onclick="startCamera()">📷 カメラを開始して計測する</button>
-        <div id="scroll-hint" style="display:none;margin-top:10px;padding:10px;background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;text-align:center;font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;">
-          ↓ 開始後は画面を下にスクロールして<br>呼吸ガイドを確認してください
-        </div>
-      </div>
-    </div>
-  </div>
+    <div id="slot-explore-sensor"></div>
 
   <!-- スキャン -->
   <div class="section" id="scan-section">
@@ -639,6 +712,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
       <button class="abort-btn" id="abort-scan-btn" style="display:none" onclick="abortScan()">■ 計測を中止する</button>
     </div>
   </div>
+
 
   <!-- スキャン結果 -->
   <div class="section" id="result-section">
@@ -688,6 +762,179 @@ header h1 span { -webkit-text-fill-color: transparent; }
     </div>
   </div>
 
+
+    <div id="slot-explore-breath"></div>
+  </div>
+
+  <!-- ══════ トレーニング ══════ -->
+  <div class="screen" id="screen-train">
+    <div class="screen-bar">
+      <button class="back-btn" onclick="goHomeScreen()">← ホーム</button>
+      <div class="screen-title">トレーニング</div>
+    </div>
+
+  <!-- すぐにトレーニング（ペース選択） -->
+  <div class="section" id="train-only-section">
+    <div class="card" style="border-color:rgba(129,212,160,0.3);background:rgba(129,212,160,0.05);">
+      <div class="card-title">⚡ 呼吸ペースを選ぶ</div>
+      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
+        ペースを選んで「トレーニング開始」を押してください<br>トレーニング中でもペースは変更できます
+      </div>
+
+      <!-- ペース選択 -->
+      <div class="pace-picker" id="pace-picker"></div>
+
+      <div style="text-align:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;">
+        選択中: <strong style="color:var(--accent2);font-size:15px;" id="pace-selected-label">6.0</strong> 回 / 分
+        <span id="pace-crown-note" style="display:none;"><br>👑 = 前回のスキャンで最適だったペース</span>
+      </div>
+
+      <button onclick="startTrainOnlyMode()" style="width:100%;padding:14px;background:var(--accent2);color:#000;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">
+        ▶ このペースでトレーニング開始
+      </button>
+
+      <!-- 自律神経評価（トレーニング中リアルタイム更新） -->
+      <div id="train-only-autonomic" style="display:none;margin-top:12px;font-size:12px;font-family:'DM Mono',monospace;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);line-height:1.8;"></div>
+    </div>
+  </div>
+
+
+    <div id="slot-train-breath"></div>
+
+    <div id="slot-train-sensor"></div>
+  </div>
+
+  <!-- ══════ 詳細データ ══════ -->
+  <div class="screen" id="screen-detail">
+    <div class="screen-bar">
+      <button class="back-btn" onclick="goHomeScreen()">← ホーム</button>
+      <div class="screen-title">詳細データ</div>
+    </div>
+
+  <!-- キャリブレーション -->
+  <div class="section" id="calib-section">
+    <div class="card">
+      <div class="card-title">🔧 キャリブレーション（個人基準値）</div>
+      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
+        安静時の心拍変動を基準値として記録します。<br>スキャン前に一度実施すると精度が上がります。
+      </div>
+      <div id="calib-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:10px;">未実施（スキャン前に実施推奨）</div>
+      <button id="calib-btn" onclick="startCalibration()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;">
+        🔧 キャリブレーション開始（30秒）
+      </button>
+    </div>
+  </div>
+
+
+  <!-- 品質スコア -->
+  <div class="section" id="quality-section">
+    <div class="card">
+      <div class="card-title">📈 計測品質スコア</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+        <div style="text-align:center;min-width:80px;">
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">品質スコア</div>
+          <div id="quality-score-val" style="font-size:42px;font-weight:900;font-family:'DM Mono',monospace;color:var(--text3);">--</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">/ 100</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">アーティファクト率</div>
+          <div id="artifact-rate" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:8px;margin-bottom:4px;">検出ピーク数</div>
+          <div id="peak-count" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+        </div>
+      </div>
+      <div id="quality-warning" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6;margin-bottom:8px;"></div>
+      <div id="autonomic-eval" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);line-height:1.8;"></div>
+    </div>
+  </div>
+
+
+  <!-- HRV詳細 -->
+  <div class="section" id="hrv-section">
+    <div class="card">
+      <div class="card-title">📊 HRV 詳細データ</div>
+      <div id="hrv-grid">
+        <div class="hrv-metric"><div class="hm-label">RMSSD</div><div class="hm-val blue" id="hm-rmssd">--</div><div class="hm-unit">ms</div></div>
+        <div class="hrv-metric"><div class="hm-label">SDNN</div><div class="hm-val green" id="hm-sdnn">--</div><div class="hm-unit">ms</div></div>
+        <div class="hrv-metric"><div class="hm-label">pNN50</div><div class="hm-val yellow" id="hm-pnn50">--</div><div class="hm-unit">%</div></div>
+        <div class="hrv-metric"><div class="hm-label">LFパワー</div><div class="hm-val blue" id="hm-lf">--</div><div class="hm-unit">ms²</div></div>
+        <div class="hrv-metric"><div class="hm-label">HFパワー</div><div class="hm-val green" id="hm-hf">--</div><div class="hm-unit">ms²</div></div>
+        <div class="hrv-metric"><div class="hm-label">LF/HF比</div><div class="hm-val yellow" id="hm-lfhf">--</div><div class="hm-unit">ratio</div></div>
+      </div>
+      <canvas id="poincare-canvas"></canvas>
+    </div>
+  </div>
+
+    <div class="section">
+      <div class="card">
+        <div class="card-title">📝 ログ</div>
+      <div id="log-area" style="max-height:200px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共用パーツ（JSで各画面のスロットへ移動） -->
+  <div id="shared-parts" style="display:none">
+  <!-- カメラ -->
+  <div class="section" id="sensor-section">
+    <div class="card" id="camera-card">
+      <div class="card-title">📡 心拍センサー（カメラPPG）</div>
+
+      <div id="video-wrap">
+        <video id="video" playsinline muted autoplay></video>
+        <div id="finger-overlay">
+          <span class="fo-icon">☝️</span>
+          <span>カメラを起動して<br>指先をレンズに当ててください</span>
+        </div>
+
+      </div>
+
+      <div class="signal-bar-wrap">
+        <canvas id="signal-canvas"></canvas>
+        <div id="signal-status">信号待機中</div>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-box">
+          <div class="mb-label">心拍数</div>
+          <div class="mb-val blue" id="hr-disp">--</div>
+          <div class="mb-unit">bpm</div>
+        </div>
+        <div class="metric-box">
+          <div class="mb-label">RMSSD</div>
+          <div class="mb-val green" id="rmssd-disp">--</div>
+          <div class="mb-unit">ms</div>
+        </div>
+        <div class="metric-box">
+          <div class="mb-label">信号品質</div>
+          <div class="mb-val yellow" id="snr-disp">--</div>
+          <div class="mb-unit">dB</div>
+        </div>
+      </div>
+
+      <!-- 品質インジケーター -->
+      <div id="quality-bar">
+        <div id="quality-icon">⚪</div>
+        <div id="quality-text">カメラを起動してください</div>
+        <div id="quality-dots">
+          <div class="qdot" id="qd0"></div>
+          <div class="qdot" id="qd1"></div>
+          <div class="qdot" id="qd2"></div>
+          <div class="qdot" id="qd3"></div>
+          <div class="qdot" id="qd4"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="start-btn" onclick="startCamera()">📷 カメラを開始して計測する</button>
+        <div id="scroll-hint" style="display:none;margin-top:10px;padding:10px;background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;text-align:center;font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;">
+          ↓ 開始後は画面を下にスクロールして<br>呼吸ガイドを確認してください
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- 呼吸トレーニング -->
   <div class="section" id="breath-section">
     <div class="card">
@@ -720,57 +967,8 @@ header h1 span { -webkit-text-fill-color: transparent; }
     </div>
   </div>
 
-  <!-- キャリブレーション -->
-  <div class="section" id="calib-section">
-    <div class="card">
-      <div class="card-title">🔧 キャリブレーション（個人基準値）</div>
-      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
-        安静時の心拍変動を基準値として記録します。<br>スキャン前に一度実施すると精度が上がります。
-      </div>
-      <div id="calib-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:10px;">未実施（スキャン前に実施推奨）</div>
-      <button id="calib-btn" onclick="startCalibration()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;">
-        🔧 キャリブレーション開始（30秒）
-      </button>
-    </div>
   </div>
 
-  <!-- 品質スコア -->
-  <div class="section" id="quality-section">
-    <div class="card">
-      <div class="card-title">📈 計測品質スコア</div>
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
-        <div style="text-align:center;min-width:80px;">
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">品質スコア</div>
-          <div id="quality-score-val" style="font-size:42px;font-weight:900;font-family:'DM Mono',monospace;color:var(--text3);">--</div>
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">/ 100</div>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">アーティファクト率</div>
-          <div id="artifact-rate" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:8px;margin-bottom:4px;">検出ピーク数</div>
-          <div id="peak-count" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
-        </div>
-      </div>
-      <div id="quality-warning" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6;margin-bottom:8px;"></div>
-      <div id="autonomic-eval" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);line-height:1.8;"></div>
-    </div>
-  </div>
-
-  <!-- HRV詳細 -->
-  <div class="section" id="hrv-section">
-    <div class="card">
-      <div class="card-title">📊 HRV 詳細データ</div>
-      <div id="hrv-grid">
-        <div class="hrv-metric"><div class="hm-label">RMSSD</div><div class="hm-val blue" id="hm-rmssd">--</div><div class="hm-unit">ms</div></div>
-        <div class="hrv-metric"><div class="hm-label">SDNN</div><div class="hm-val green" id="hm-sdnn">--</div><div class="hm-unit">ms</div></div>
-        <div class="hrv-metric"><div class="hm-label">pNN50</div><div class="hm-val yellow" id="hm-pnn50">--</div><div class="hm-unit">%</div></div>
-        <div class="hrv-metric"><div class="hm-label">LFパワー</div><div class="hm-val blue" id="hm-lf">--</div><div class="hm-unit">ms²</div></div>
-        <div class="hrv-metric"><div class="hm-label">HFパワー</div><div class="hm-val green" id="hm-hf">--</div><div class="hm-unit">ms²</div></div>
-        <div class="hrv-metric"><div class="hm-label">LF/HF比</div><div class="hm-val yellow" id="hm-lfhf">--</div><div class="hm-unit">ratio</div></div>
-      </div>
-      <canvas id="poincare-canvas"></canvas>
-    </div>
-  </div>
 <!-- 全画面 計測中オーバーレイ（自動切替・タップ無効） -->
 <div id="measuring-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(10,14,20,0.93);flex-direction:column;align-items:center;justify-content:center;gap:20px;pointer-events:none;">
 
@@ -884,6 +1082,10 @@ window.addEventListener('load', () => {
 
   // トレーニングのみモードの初期化（前回の最適値を読み込む）
   initTrainOnlyMode();
+
+  // ホーム画面から開始
+  showScreen('home');
+  updateHomeTrainLabel();
 
   // 準備タイムcanvas初期化
   prepCanvas = document.getElementById('prep-breath-canvas');
@@ -1113,7 +1315,6 @@ function onReadyComplete() {
     scanSec.style.transition = 'opacity 0.6s';
     setTimeout(() => { scanSec.style.opacity = '1'; }, 50);
 
-    document.getElementById('hrv-section').style.display = 'block';
 
     // 呼吸の円まで自動スクロール
     setTimeout(() => {
@@ -1768,7 +1969,6 @@ async function startScan() {
   document.getElementById('phase-badge').textContent='スキャン中';
   document.getElementById('scan-section').style.display='block';
   document.getElementById('breath-section').style.display='block';
-  document.getElementById('hrv-section').style.display='block';
   setTimeout(resizeCanvases, 100);
 
   // スキャンセクションを完全表示（opacity解除）
@@ -1851,11 +2051,6 @@ function abortScan() {
   log('⏹ 計測を中止しました', 'warn');
   showToast('⏹ 計測を中止しました', 2500);
 
-  // 上のペース選択まで戻す
-  setTimeout(() => {
-    const t = document.getElementById('train-only-section');
-    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 400);
 }
 
 // ── トレーニングを中止する ──
@@ -1945,18 +2140,21 @@ function showPrepTime(nextBpm, prevBpm) {
 
 // ── 結果画面からトレーニング開始 ──
 function startTrainingFromResult() {
-  // 呼吸セクションへスクロール
+  // トレーニング画面へ移動してから開始
+  goTrain();
   document.getElementById('breath-section').style.display = 'block';
   animateBreath(trainBestBpm);
   startTraining();
+  document.getElementById('train-title').textContent = `${Number(trainBestBpm).toFixed(1)}回/分でトレーニング中`;
+  document.getElementById('train-desc').innerHTML =
+    '丸が大きくなったら息を吸い、<br>小さくなったらゆっくり吐きます。';
 
   // 自律神経評価も表示
   const evalEl = document.getElementById('train-only-autonomic');
   if (evalEl) { evalEl.style.display = 'block'; updateTrainOnlyAutonomic(); }
   setTimeout(() => {
-    document.getElementById('breath-canvas-wrap').scrollIntoView({
-      behavior: 'smooth', block: 'center'
-    });
+    const w = document.getElementById('breath-canvas-wrap');
+    if (w) w.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 300);
 }
 
@@ -2039,9 +2237,8 @@ function startTrainOnlyMode() {
   updateTrainOnlyAutonomic();
 
   setTimeout(() => {
-    document.getElementById('breath-canvas-wrap').scrollIntoView({
-      behavior: 'smooth', block: 'center'
-    });
+    const w = document.getElementById('breath-canvas-wrap');
+    if (w) w.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 300);
 }
 
@@ -2240,6 +2437,7 @@ function finishScan() {
   savedBestBpm = best.bpm;
   trainBestBpm = best.bpm;
   buildPacePicker();
+  updateHomeTrainLabel();
 }
 
 // ══════════════════════════════════════
@@ -2306,12 +2504,26 @@ function drawBreathCircle(progress,color) {
 // トレーニング
 // ══════════════════════════════════════
 function startTraining() {
-  if (!capturing){log('カメラを先に起動してください','warn');return;}
+  if (!capturing){
+    log('カメラを先に起動してください','warn');
+    showToast('📷 先に下のセンサーで<br>カメラを起動してください', 3000);
+    const s = document.getElementById('sensor-section');
+    if (s) s.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
   trainPhase='running'; trainHrvHistory=[];
   document.getElementById('start-train-btn').disabled=true;
   log(`トレーニング開始: ${trainBestBpm}回/分`, 'ok');
   animateBreath(trainBestBpm);
   trainLoop();
+
+  // 表示をトレーニング中の状態に揃える
+  document.getElementById('train-title').textContent =
+    `${Number(trainBestBpm).toFixed(1)}回/分でトレーニング中`;
+  document.getElementById('train-desc').innerHTML =
+    '丸が大きくなったら息を吸い、<br>小さくなったらゆっくり吐きます。<br>上のペース選択でいつでも変更できます。';
+  const ev = document.getElementById('train-only-autonomic');
+  if (ev) { ev.style.display = 'block'; updateTrainOnlyAutonomic(); }
 }
 
 function trainLoop() {
@@ -2417,9 +2629,84 @@ function getCalibAdjustedScore(hrv) {
   };
 }
 
-// ── トップに戻る ──
+// ══════════════════════════════════════
+// 画面切替
+// ══════════════════════════════════════
+let currentScreen = 'home';
+
+function showScreen(name) {
+  ['home','explore','train','detail'].forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    if (el) el.classList.toggle('active', s === name);
+  });
+  currentScreen = name;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  // ホームボタンとセンサー状態バッジはホーム画面では隠す
+  const hb = document.getElementById('home-btn');
+  if (hb) hb.style.display = (name === 'home') ? 'none' : 'flex';
+  const pb = document.getElementById('phase-badge');
+  if (pb) pb.style.display = (name === 'home' || name === 'detail') ? 'none' : 'inline-block';
+}
+
+// 共用パーツを指定スロットへ移動
+function mountTo(partId, slotId) {
+  const part = document.getElementById(partId);
+  const slot = document.getElementById(slotId);
+  if (part && slot && part.parentElement !== slot) slot.appendChild(part);
+}
+
+// ── ホームへ ──
+function goHomeScreen() {
+  // 進行中の処理を止める
+  if (scanPhase === 'scanning') abortScan();
+  if (trainPhase === 'running') stopTraining();
+  showScreen('home');
+  updateHomeTrainLabel();
+}
+
+// ── 最適呼吸数をさがす ──
+function goExplore() {
+  mountTo('sensor-section', 'slot-explore-sensor');
+  mountTo('breath-section', 'slot-explore-breath');
+  document.getElementById('sensor-section').style.display = 'block';
+  showScreen('explore');
+  setTimeout(resizeCanvases, 80);
+}
+
+// ── トレーニング ──
+function goTrain() {
+  mountTo('breath-section', 'slot-train-breath');
+  mountTo('sensor-section', 'slot-train-sensor');
+  document.getElementById('sensor-section').style.display = 'block';
+  document.getElementById('breath-section').style.display = 'block';
+  showScreen('train');
+  setTimeout(resizeCanvases, 80);
+  // カメラ未起動なら案内
+  if (!capturing) {
+    showToast('📷 下の「カメラを開始して計測する」で<br>センサーを起動してください', 3500);
+  }
+}
+
+// ── 詳細データ ──
+function goDetail() {
+  showScreen('detail');
+  setTimeout(resizeCanvases, 80);
+}
+
+// ホームのトレーニングボタンに前回のペースを表示
+function updateHomeTrainLabel() {
+  const el = document.getElementById('home-train-sub');
+  if (!el) return;
+  if (savedBestBpm) {
+    el.innerHTML = `前回の最適ペース <strong style="color:var(--accent2);">${Number(savedBestBpm).toFixed(1)}回/分</strong><br>すぐに共鳴呼吸を始めます`;
+  } else {
+    el.innerHTML = '好きなペースを選んで<br>すぐに共鳴呼吸を始めます';
+  }
+}
+
+// ── ホームボタン（右下） ──
 function goHome() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  goHomeScreen();
 }
 
 // ── トースト通知 ──
