@@ -832,14 +832,36 @@ header h1 span { -webkit-text-fill-color: transparent; }
     <div class="card">
       <div class="card-title">🔧 キャリブレーション（個人基準値）</div>
       <div style="font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:16px;">
-        安静時の心拍変動を基準値として記録します。<br>計測の前に一度実施すると精度が上がります。
+        安静時の心拍変動を基準値として記録します。<br>
+        下のセンサーでカメラを起動し、指を当てたまま<br>30秒間じっとしていてください。
       </div>
       <div id="calib-status" style="font-size:14px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:10px;text-align:center;">未実施（計測前に実施推奨）</div>
       <button id="calib-btn" onclick="startCalibration()" style="background:rgba(79,195,247,0.12);color:var(--accent);border:1.5px solid rgba(79,195,247,0.35);border-radius:12px;padding:17px 20px;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;cursor:pointer;width:100%;">
         🔧 キャリブレーション開始（30秒）
       </button>
+
+      <!-- 計測中の進捗 -->
+      <div id="calib-progress" style="display:none;margin-top:16px;">
+        <div style="text-align:center;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.12em;">安静にしてください</div>
+          <div id="calib-count" style="font-size:52px;font-weight:900;font-family:'DM Mono',monospace;color:var(--accent);line-height:1.1;">30</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">秒</div>
+        </div>
+        <div class="prog-bar-wrap" style="margin-bottom:14px;">
+          <div class="prog-bar-fill" id="calib-prog" style="width:0%"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div class="metric-box"><div class="mb-label">心拍数</div><div class="mb-val blue" id="calib-hr">--</div><div class="mb-unit">bpm</div></div>
+          <div class="metric-box"><div class="mb-label">RMSSD</div><div class="mb-val green" id="calib-rmssd">--</div><div class="mb-unit">ms</div></div>
+          <div class="metric-box"><div class="mb-label">品質</div><div class="mb-val yellow" id="calib-q">--</div><div class="mb-unit">/100</div></div>
+        </div>
+        <button class="abort-btn" onclick="abortCalibration()">■ 中止する</button>
+      </div>
     </div>
   </div>
+
+  <!-- 詳細画面のセンサー置き場 -->
+  <div id="slot-detail-sensor"></div>
 
 
   <!-- 品質スコア -->
@@ -1220,9 +1242,19 @@ async function startCamera() {
       '指先をカメラのレンズに<br>しっかり当ててください',
       '📍 コツ：人差し指の腹でレンズを完全に塞ぐ<br>💡 懐中電灯アプリをONにすると精度UP<br>🔴 映像が真っ赤になればOK');
 
-    btn.textContent = '⏳ 信号安定待ち...';
     captureLoop();
-    startReadyWait();
+
+    if (currentScreen === 'explore') {
+      // 最適呼吸数をさがす画面：30秒の準備待ちへ
+      btn.textContent = '⏳ 信号安定待ち...';
+      startReadyWait();
+    } else {
+      // トレーニング／詳細画面：センサーを動かすだけ
+      btn.textContent = '✅ センサー動作中';
+      btn.disabled = true;
+      log('センサーを起動しました。指をレンズに当ててください。', 'ok');
+      showToast('✅ センサー起動。指をレンズに当ててください', 3000);
+    }
 
   } catch(e) {
     log('カメラエラー: ' + e.message, 'warn');
@@ -2656,7 +2688,17 @@ function stopTraining() {
 // ユーティリティ
 // ══════════════════════════════════════
 // ── キャリブレーション ──
+let calibTimer = null;
+
 function startCalibration() {
+  // カメラが起動していなければ案内
+  if (!capturing) {
+    showToast('📷 先に下のセンサーで<br>カメラを起動してください', 3500);
+    const s = document.getElementById('sensor-section');
+    if (s) s.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
   calibPhase = 'running';
   calibRR = [];
   artifactCount = 0;
@@ -2665,17 +2707,47 @@ function startCalibration() {
   log('🔧 キャリブレーション開始（30秒間安静にしてください）', 'info');
 
   const btn = document.getElementById('calib-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '計測中... 30秒'; }
+  if (btn) { btn.disabled = true; btn.textContent = '計測中...'; }
+  document.getElementById('calib-progress').style.display = 'block';
+  document.getElementById('calib-status').textContent = '計測中...';
+  document.getElementById('calib-status').style.color = 'var(--accent)';
 
   let count = 30;
-  const timer = setInterval(() => {
+  document.getElementById('calib-count').textContent = count;
+  document.getElementById('calib-prog').style.width = '0%';
+
+  calibTimer = setInterval(() => {
     count--;
-    if (btn) btn.textContent = `計測中... ${count}秒`;
+    document.getElementById('calib-count').textContent = Math.max(0, count);
+    document.getElementById('calib-prog').style.width = ((30 - count) / 30 * 100) + '%';
+
+    // リアルタイム表示
+    const hrv = calcHRV(calibRR.length > 4 ? calibRR : rrIntervals);
+    if (hrv) {
+      document.getElementById('calib-hr').textContent = Math.round(hrv.hr);
+      document.getElementById('calib-rmssd').textContent = Math.round(hrv.rmssd);
+    }
+    document.getElementById('calib-q').textContent = qualityScore || '--';
+
     if (count <= 0) {
-      clearInterval(timer);
+      clearInterval(calibTimer); calibTimer = null;
       finishCalibration();
     }
   }, 1000);
+}
+
+// キャリブレーションを中止
+function abortCalibration() {
+  if (calibTimer) { clearInterval(calibTimer); calibTimer = null; }
+  calibPhase = 'none';
+  document.getElementById('calib-progress').style.display = 'none';
+  const btn = document.getElementById('calib-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '🔧 キャリブレーション開始（30秒）'; }
+  const st = document.getElementById('calib-status');
+  st.textContent = '中止しました（計測前に実施推奨）';
+  st.style.color = 'var(--text3)';
+  log('⏹ キャリブレーションを中止しました', 'warn');
+  showToast('⏹ キャリブレーションを中止しました', 2500);
 }
 
 function finishCalibration() {
@@ -2691,10 +2763,19 @@ function finishCalibration() {
       lfhf: hrv.lfhf
     };
     log(`✅ キャリブレーション完了！基準値 HR:${Math.round(hrv.hr)}bpm RMSSD:${Math.round(hrv.rmssd)}ms`, 'ok');
-    document.getElementById('calib-status').textContent =
-      `基準値: HR ${Math.round(hrv.hr)}bpm / RMSSD ${Math.round(hrv.rmssd)}ms`;
-    document.getElementById('calib-status').style.color = 'var(--accent2)';
+    const st = document.getElementById('calib-status');
+    st.innerHTML =
+      `✅ <strong>基準値を記録しました</strong><br>` +
+      `HR ${Math.round(hrv.hr)} bpm ／ RMSSD ${Math.round(hrv.rmssd)} ms<br>` +
+      `SDNN ${Math.round(hrv.sdnn)} ms ／ LF/HF ${hrv.lfhf.toFixed(2)}`;
+    st.style.color = 'var(--accent2)';
+    showToast('✅ キャリブレーション完了', 2500);
+  } else {
+    const st = document.getElementById('calib-status');
+    st.textContent = '⚠️ 信号が不足しました。指を当て直して再実行してください';
+    st.style.color = 'var(--accent3)';
   }
+  document.getElementById('calib-progress').style.display = 'none';
   const btn = document.getElementById('calib-btn');
   if (btn) { btn.disabled = false; btn.textContent = '🔧 再キャリブレーション'; }
 }
@@ -2743,26 +2824,31 @@ function goHomeScreen() {
   // 進行中の処理を止める
   if (scanPhase === 'scanning') abortScan();
   if (trainPhase === 'running') stopTraining();
+  if (calibPhase === 'running') abortCalibration();
   showScreen('home');
   updateHomeTrainLabel();
 }
 
 // ── 最適呼吸数をさがす ──
 function goExplore() {
+  if (calibPhase === 'running') abortCalibration();
   mountTo('sensor-section', 'slot-explore-sensor');
   mountTo('breath-section', 'slot-explore-breath');
   document.getElementById('sensor-section').style.display = 'block';
   showScreen('explore');
+  updateSensorBtnLabel();
   setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
 }
 
 // ── トレーニング ──
 function goTrain() {
+  if (calibPhase === 'running') abortCalibration();
   mountTo('breath-section', 'slot-train-breath');
   mountTo('sensor-section', 'slot-train-sensor');
   document.getElementById('sensor-section').style.display = 'block';
   document.getElementById('breath-section').style.display = 'block';
   showScreen('train');
+  updateSensorBtnLabel();
   setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
   // カメラ未起動なら案内
   if (!capturing) {
@@ -2772,8 +2858,30 @@ function goTrain() {
 
 // ── 詳細データ ──
 function goDetail() {
+  mountTo('sensor-section', 'slot-detail-sensor');
+  document.getElementById('sensor-section').style.display = 'block';
   showScreen('detail');
+  updateSensorBtnLabel();
   setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
+}
+
+// センサー起動ボタンの文言を画面に合わせる
+function updateSensorBtnLabel() {
+  const btn = document.getElementById('start-btn');
+  if (!btn) return;
+  if (capturing) {
+    // すでに起動している場合はそのまま
+    if (scanPhase !== 'scanning' && !btn.textContent.includes('スキャン')) {
+      btn.textContent = '✅ センサー動作中';
+      btn.disabled = true;
+    }
+    return;
+  }
+  btn.disabled = false;
+  btn.onclick = startCamera;
+  btn.textContent = (currentScreen === 'explore')
+    ? '📷 カメラを開始して計測する'
+    : '📷 カメラ（センサー）を起動する';
 }
 
 // ホームのトレーニングボタンに前回のペースを表示
