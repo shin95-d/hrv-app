@@ -725,6 +725,19 @@ header h1 span { -webkit-text-fill-color: transparent; }
         <div class="prog-bar-fill" id="scan-prog" style="width:0%"></div>
       </div>
       <div id="scan-grid"></div>
+
+      <!-- 計測中の信号品質 -->
+      <div id="scan-signal" style="display:none;margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">信号品質</span>
+          <span id="scan-sq-val" style="font-size:18px;font-weight:900;font-family:'DM Mono',monospace;color:var(--accent2);">--%</span>
+        </div>
+        <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">
+          <div id="scan-sq-bar" style="height:100%;width:0%;background:var(--accent2);border-radius:4px;transition:width 0.4s,background 0.4s;"></div>
+        </div>
+        <div id="scan-sq-note" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:8px;text-align:center;">指をレンズに当てたまま呼吸してください</div>
+      </div>
+
       <button class="abort-btn" id="abort-scan-btn" style="display:none" onclick="abortScan()">■ 計測を中止する</button>
     </div>
   </div>
@@ -1025,7 +1038,19 @@ header h1 span { -webkit-text-fill-color: transparent; }
 
   <div id="mo-label" style="font-size:18px;font-weight:700;color:#e0eeff;transition:color 0.4s;">信号を取得中...</div>
 
-  <div id="mo-hr" style="font-size:32px;font-weight:900;font-family:'DM Mono',monospace;color:#3d5a7a;transition:color 0.5s;">-- bpm</div>
+  <div style="display:flex;gap:28px;align-items:center;">
+    <div style="text-align:center;">
+      <div style="font-size:10px;color:#3d5a7a;font-family:'DM Mono',monospace;">心拍数</div>
+      <div id="mo-hr" style="font-size:32px;font-weight:900;font-family:'DM Mono',monospace;color:#3d5a7a;transition:color 0.5s;line-height:1.2;">--</div>
+      <div style="font-size:10px;color:#3d5a7a;font-family:'DM Mono',monospace;">bpm</div>
+    </div>
+    <div style="width:1px;height:46px;background:rgba(79,195,247,0.15);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:10px;color:#3d5a7a;font-family:'DM Mono',monospace;">信号品質</div>
+      <div id="mo-sq" style="font-size:32px;font-weight:900;font-family:'DM Mono',monospace;color:#3d5a7a;transition:color 0.5s;line-height:1.2;">--</div>
+      <div style="font-size:10px;color:#3d5a7a;font-family:'DM Mono',monospace;">%</div>
+    </div>
+  </div>
 
   <div style="width:220px;height:5px;background:#1a2332;border-radius:3px;overflow:hidden;">
     <div id="mo-prog" style="height:100%;width:0%;background:linear-gradient(90deg,#4fc3f7,#81d4a0);border-radius:3px;transition:width 0.9s;"></div>
@@ -1296,7 +1321,7 @@ function readyLoop() {
 
   // HR表示
   if (hasHR) {
-    document.getElementById('mo-hr').textContent = Math.round(hrv.hr) + ' bpm';
+    document.getElementById('mo-hr').textContent = Math.round(hrv.hr);
     document.getElementById('mo-hr').style.color = '#81d4a0';
     // 円を緑に
     const circle = document.getElementById('mo-circle');
@@ -1508,6 +1533,7 @@ function captureLoop() {
     sqEl.style.color = sq >= 70 ? 'var(--accent2)' : sq >= 40 ? 'var(--accent3)' : 'var(--warn)';
     document.getElementById('signal-status').textContent =
       `信号品質 ${sq}%  ${Math.round(fsEstimate)}fps`;
+    updateSignalQualityViews(sq);
   }
   if (frameCount % 30 === 0) drawHRVDetail();
 }
@@ -1735,6 +1761,38 @@ function updateQualityDisplay() {
 // SNR(dB) を 0〜100% の信号品質スコアに変換
 // 3dB未満＝信号なし、14dB以上＝良好
 let lastSignalQuality = 0;   // 直近の信号品質（%）
+
+// 計測中の各画面に信号品質を反映
+function updateSignalQualityViews(sq) {
+  const col = sq >= 70 ? '#81d4a0' : sq >= 40 ? '#ffb347' : '#ff6b6b';
+
+  // 30秒の準備オーバーレイ
+  const mo = document.getElementById('mo-sq');
+  if (mo) { mo.textContent = sq; mo.style.color = col; }
+
+  // スキャン中の信号品質バー
+  const v = document.getElementById('scan-sq-val');
+  const bar = document.getElementById('scan-sq-bar');
+  if (v && bar) {
+    v.textContent = sq + '%';
+    v.style.color = col;
+    bar.style.width = sq + '%';
+    bar.style.background = col;
+    const note = document.getElementById('scan-sq-note');
+    if (note) {
+      if (sq < 30) {
+        note.textContent = '⚠️ 信号が弱いです。指を当て直してください';
+        note.style.color = 'var(--warn)';
+      } else if (sq < 60) {
+        note.textContent = '指を動かさないようにしてください';
+        note.style.color = 'var(--accent3)';
+      } else {
+        note.textContent = '✅ 良好です。このまま呼吸を続けてください';
+        note.style.color = 'var(--accent2)';
+      }
+    }
+  }
+}
 
 function snrToPercent(snr) {
   const pct = (snr - 3) / (14 - 3) * 100;
@@ -2120,6 +2178,7 @@ async function startScan() {
   scanPhase='scanning'; scanResults=[]; currentScanIdx=0;
   scanAborted = false;                                      // 中止フラグをリセット
   document.getElementById('abort-scan-btn').style.display = 'block';
+  document.getElementById('scan-signal').style.display = 'block';
   await runNextScan();
 }
 
@@ -2143,6 +2202,7 @@ function abortScan() {
 
   // UIを元に戻す
   document.getElementById('abort-scan-btn').style.display = 'none';
+  document.getElementById('scan-signal').style.display = 'none';
   document.getElementById('scan-status-text').innerHTML = '⏹ 計測を中止しました';
   document.getElementById('scan-status-text').className = 'spi-text';
   document.getElementById('scan-prog').style.width = '0%';
@@ -2537,6 +2597,7 @@ function finishScan() {
   });
 
   document.getElementById('abort-scan-btn').style.display = 'none';
+  document.getElementById('scan-signal').style.display = 'none';
   document.getElementById('phase-badge').textContent='完了';
   document.getElementById('scan-status-text').textContent='スキャン完了！';
   document.getElementById('pt-overall-val').textContent='8/8';
