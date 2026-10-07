@@ -853,7 +853,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
         <div style="display:flex;gap:8px;">
           <div class="metric-box"><div class="mb-label">心拍数</div><div class="mb-val blue" id="calib-hr">--</div><div class="mb-unit">bpm</div></div>
           <div class="metric-box"><div class="mb-label">RMSSD</div><div class="mb-val green" id="calib-rmssd">--</div><div class="mb-unit">ms</div></div>
-          <div class="metric-box"><div class="mb-label">品質</div><div class="mb-val yellow" id="calib-q">--</div><div class="mb-unit">/100</div></div>
+          <div class="metric-box"><div class="mb-label">信号品質</div><div class="mb-val yellow" id="calib-q">--</div><div class="mb-unit">%</div></div>
         </div>
         <button class="abort-btn" onclick="abortCalibration()">■ 中止する</button>
       </div>
@@ -946,7 +946,7 @@ header h1 span { -webkit-text-fill-color: transparent; }
         <div class="metric-box">
           <div class="mb-label">信号品質</div>
           <div class="mb-val yellow" id="snr-disp">--</div>
-          <div class="mb-unit">dB</div>
+          <div class="mb-unit">%</div>
         </div>
       </div>
 
@@ -1175,21 +1175,22 @@ function setGuide(step, icon, main, sub) {
 
 function updateQuality(snr, hasHR) {
   const dots = 5;
+  const sq = snrToPercent(snr);   // 0〜100%
   let level = 0;
   let icon = '⚪', text = '指をカメラに当ててください', color = 'var(--text3)';
 
   if (!capturing) {
     icon = '⚪'; text = 'カメラを起動してください'; level = 0;
-  } else if (snr < 2) {
-    icon = '🔴'; text = '指をレンズにしっかり密着させてください'; level = 1; color = 'var(--warn)';
-  } else if (snr < 5) {
-    icon = '🟡'; text = '信号が弱いです。指を強く当ててください'; level = 2; color = 'var(--accent3)';
-  } else if (snr < 8) {
-    icon = '🟡'; text = 'もう少し安定するまで待ってください'; level = 3; color = 'var(--accent3)';
+  } else if (sq < 10) {
+    icon = '🔴'; text = `信号品質 ${sq}%・指をレンズに密着させてください`; level = 1; color = 'var(--warn)';
+  } else if (sq < 30) {
+    icon = '🟡'; text = `信号品質 ${sq}%・指をもう少し強く当ててください`; level = 2; color = 'var(--accent3)';
+  } else if (sq < 50) {
+    icon = '🟡'; text = `信号品質 ${sq}%・安定するまで待ってください`; level = 3; color = 'var(--accent3)';
   } else if (!hasHR) {
-    icon = '🟢'; text = '信号OK！心拍を検出中...'; level = 3; color = 'var(--accent2)';
+    icon = '🟢'; text = `信号品質 ${sq}%・心拍を検出中...`; level = 4; color = 'var(--accent2)';
   } else {
-    icon = '🟢'; text = '計測準備完了！スキャンを開始できます'; level = 5; color = 'var(--accent2)';
+    icon = '🟢'; text = `信号品質 ${sq}%・計測できます`; level = 5; color = 'var(--accent2)';
   }
 
   document.getElementById('quality-icon').textContent = icon;
@@ -1200,7 +1201,7 @@ function updateQuality(snr, hasHR) {
     const d = document.getElementById(`qd${i}`);
     d.classList.toggle('on', i < level);
   }
-  document.getElementById('signal-status').textContent = `SNR: ${snr.toFixed(1)}dB`;
+  document.getElementById('signal-status').textContent = `信号品質 ${sq}%`;
 }
 
 // ══════════════════════════════════════
@@ -1500,9 +1501,13 @@ function captureLoop() {
       document.getElementById('hr-disp').textContent = Math.round(hrv.hr);
       document.getElementById('rmssd-disp').textContent = Math.round(hrv.rmssd);
     }
-    document.getElementById('snr-disp').textContent = snr.toFixed(1);
+    const sq = snrToPercent(snr);
+    lastSignalQuality = sq;
+    const sqEl = document.getElementById('snr-disp');
+    sqEl.textContent = sq;
+    sqEl.style.color = sq >= 70 ? 'var(--accent2)' : sq >= 40 ? 'var(--accent3)' : 'var(--warn)';
     document.getElementById('signal-status').textContent =
-      `SNR:${snr.toFixed(1)}dB  ${Math.round(fsEstimate)}fps  4次BPF`;
+      `信号品質 ${sq}%  ${Math.round(fsEstimate)}fps`;
   }
   if (frameCount % 30 === 0) drawHRVDetail();
 }
@@ -1663,7 +1668,7 @@ function updateQualityScore() {
   if (totalPeaks < 5) { qualityScore = 0; return; }
   const artifactRate = artifactCount / totalPeaks;
   const rrCount = rrIntervals.length;
-  const snrOk = document.getElementById('snr-disp').textContent > 6;
+  const snrOk = parseInt(document.getElementById('snr-disp').textContent, 10) >= 50;
 
   // スコア計算
   let score = 100;
@@ -1725,6 +1730,15 @@ function updateQualityDisplay() {
       evalEl.style.display = 'block';
     }
   }
+}
+
+// SNR(dB) を 0〜100% の信号品質スコアに変換
+// 3dB未満＝信号なし、14dB以上＝良好
+let lastSignalQuality = 0;   // 直近の信号品質（%）
+
+function snrToPercent(snr) {
+  const pct = (snr - 3) / (14 - 3) * 100;
+  return Math.max(0, Math.min(100, Math.round(pct)));
 }
 
 function estimateSNR(norm) {
@@ -1854,7 +1868,7 @@ function drawSignal(norm, snr) {
   sigCtx.clearRect(0,0,w,h);
   if (norm.length<2) return;
   const show=norm.slice(-150);
-  const ok=snr>6;
+  const ok = snrToPercent(snr) >= 40;
 
   // グリッド線
   sigCtx.strokeStyle='rgba(79,195,247,0.06)';
@@ -1913,7 +1927,7 @@ function drawOverlayWave(norm, snr) {
   if (norm.length < 2) return;
 
   const show = norm.slice(-120);
-  const ok = snr > 6;
+  const ok = snrToPercent(snr) >= 40;
 
   // 背景グラデーション
   const bgGrad = moWaveCtx.createLinearGradient(0, 0, 0, h);
@@ -2727,7 +2741,10 @@ function startCalibration() {
       document.getElementById('calib-hr').textContent = Math.round(hrv.hr);
       document.getElementById('calib-rmssd').textContent = Math.round(hrv.rmssd);
     }
-    document.getElementById('calib-q').textContent = qualityScore || '--';
+    const cq = document.getElementById('calib-q');
+    cq.textContent = lastSignalQuality;
+    cq.style.color = lastSignalQuality >= 70 ? 'var(--accent2)'
+                   : lastSignalQuality >= 40 ? 'var(--accent3)' : 'var(--warn)';
 
     if (count <= 0) {
       clearInterval(calibTimer); calibTimer = null;
