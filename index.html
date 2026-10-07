@@ -244,14 +244,14 @@ header h1 span { -webkit-text-fill-color: transparent; }
 /* HRV詳細 */
 /* 詳細画面内は常時表示（画面切替で制御） */
 #hrv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-.hrv-metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-.hm-label { font-size: 9px; color: var(--text3); }
-.hm-val { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: 2px; }
-.hm-unit { font-size: 9px; color: var(--text3); }
+.hrv-metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px; text-align: center; }
+.hm-label { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.hm-val { font-size: 28px; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: 4px; line-height: 1.1; }
+.hm-unit { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
 .hm-val.blue { color: var(--accent); }
 .hm-val.green { color: var(--accent2); }
 .hm-val.yellow { color: var(--accent3); }
-#poincare-canvas { width: 100%; height: 140px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); display: block; }
+#poincare-canvas { width: 100%; height: 190px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); display: block; }
 
 /* 準備タイムオーバーレイ */
 #prep-overlay {
@@ -526,6 +526,10 @@ header h1 span { -webkit-text-fill-color: transparent; }
 #log-area p.info { color: var(--text2); }
 #log-area p.warn { color: var(--accent3); }
 
+/* 詳細画面は文字を大きめに */
+#screen-detail .card-title { font-size: 13px; letter-spacing: 0.08em; margin-bottom: 14px; }
+#screen-detail .card { padding: 20px; }
+
 /* ===== 画面切替 ===== */
 .screen { display: none; }
 .screen.active { display: block; }
@@ -599,10 +603,19 @@ header h1 span { -webkit-text-fill-color: transparent; }
 }
 .explain-step .es-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
 .detail-link {
-  display: block; width: 100%; margin-top: 16px; padding: 13px;
-  background: transparent; color: var(--text3);
-  border: 1px solid var(--border); border-radius: 12px;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer;
+  display: block; width: 100%; text-align: left;
+  margin-top: 20px; padding: 20px;
+  background: linear-gradient(135deg, rgba(255,179,71,0.10), rgba(255,179,71,0.04));
+  color: var(--accent3);
+  border: 1.5px solid rgba(255,179,71,0.35); border-radius: 16px;
+  font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+  transition: transform 0.12s;
+}
+.detail-link:active { transform: scale(0.985); }
+.detail-link .dl-title { font-size: 19px; font-weight: 900; margin-bottom: 4px; }
+.detail-link .dl-sub {
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  line-height: 1.6; color: var(--text2);
 }
 .note-small {
   font-size: 11px; color: var(--text3); line-height: 1.8;
@@ -672,7 +685,10 @@ header h1 span { -webkit-text-fill-color: transparent; }
       </div>
     </div>
 
-    <button class="detail-link" onclick="goDetail()">📊 詳細データ・キャリブレーション</button>
+    <button class="detail-link" onclick="goDetail()">
+      <div class="dl-title">📊 詳細データを見る</div>
+      <div class="dl-sub">キャリブレーション・計測品質<br>HRVの詳しい数値とポアンカレ図</div>
+    </button>
 
     <div class="note-small">
       このアプリは健康管理を目的としたもので<br>医療機器ではありません
@@ -815,11 +831,11 @@ header h1 span { -webkit-text-fill-color: transparent; }
   <div class="section" id="calib-section">
     <div class="card">
       <div class="card-title">🔧 キャリブレーション（個人基準値）</div>
-      <div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.7;margin-bottom:12px;">
-        安静時の心拍変動を基準値として記録します。<br>スキャン前に一度実施すると精度が上がります。
+      <div style="font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:16px;">
+        安静時の心拍変動を基準値として記録します。<br>計測の前に一度実施すると精度が上がります。
       </div>
-      <div id="calib-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:10px;">未実施（スキャン前に実施推奨）</div>
-      <button id="calib-btn" onclick="startCalibration()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;">
+      <div id="calib-status" style="font-size:14px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:10px;text-align:center;">未実施（計測前に実施推奨）</div>
+      <button id="calib-btn" onclick="startCalibration()" style="background:rgba(79,195,247,0.12);color:var(--accent);border:1.5px solid rgba(79,195,247,0.35);border-radius:12px;padding:17px 20px;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;cursor:pointer;width:100%;">
         🔧 キャリブレーション開始（30秒）
       </button>
     </div>
@@ -831,20 +847,20 @@ header h1 span { -webkit-text-fill-color: transparent; }
     <div class="card">
       <div class="card-title">📈 計測品質スコア</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
-        <div style="text-align:center;min-width:80px;">
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">品質スコア</div>
-          <div id="quality-score-val" style="font-size:42px;font-weight:900;font-family:'DM Mono',monospace;color:var(--text3);">--</div>
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">/ 100</div>
+        <div style="text-align:center;min-width:104px;">
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">品質スコア</div>
+          <div id="quality-score-val" style="font-size:56px;font-weight:900;font-family:'DM Mono',monospace;color:var(--text3);line-height:1.1;">--</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">/ 100</div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">アーティファクト率</div>
-          <div id="artifact-rate" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
-          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:8px;margin-bottom:4px;">検出ピーク数</div>
-          <div id="peak-count" style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">アーティファクト率</div>
+          <div id="artifact-rate" style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:12px;margin-bottom:4px;">検出ピーク数</div>
+          <div id="peak-count" style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">--</div>
         </div>
       </div>
-      <div id="quality-warning" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6;margin-bottom:8px;"></div>
-      <div id="autonomic-eval" style="display:none;font-size:12px;font-family:'DM Mono',monospace;padding:10px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);line-height:1.8;"></div>
+      <div id="quality-warning" style="display:none;font-size:14px;line-height:1.8;padding:14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);line-height:1.6;margin-bottom:8px;"></div>
+      <div id="autonomic-eval" style="display:none;font-size:14px;line-height:1.9;padding:14px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);line-height:1.8;"></div>
     </div>
   </div>
 
@@ -1077,7 +1093,7 @@ window.addEventListener('load', () => {
   breathCanvas = document.getElementById('breath-canvas');
   breathCtx = breathCanvas.getContext('2d');
   buildScanGrid();
-  window.addEventListener('resize', resizeCanvases);
+  window.addEventListener('resize', () => { resizeCanvases(); redrawAll(); });
   setTimeout(resizeCanvases, 100);
 
   // トレーニングのみモードの初期化（前回の最適値を読み込む）
@@ -1105,6 +1121,14 @@ window.addEventListener('load', () => {
     moWaveCtx.scale(dpr, dpr);
   }
 });
+
+// canvasのサイズ変更で中身が消えるので、まとめて描き直す
+function redrawAll() {
+  try {
+    if (rrIntervals.length >= 4) drawHRVDetail();
+    if (trainHrvHistory && trainHrvHistory.length > 1) drawTrainHrv();
+  } catch(e) {}
+}
 
 function resizeCanvases() {
   [sigCanvas, poincareCanvas, trainHrvCanvas].forEach(c => {
@@ -1925,21 +1949,80 @@ function drawHRVDetail() {
 }
 
 function drawPoincare() {
-  const rr=rrIntervals.slice(-60);
-  if (rr.length<4) return;
-  const w=poincareCanvas.offsetWidth, h=poincareCanvas.offsetHeight;
-  poincareCtx.clearRect(0,0,w,h);
-  const mn=Math.min(...rr)-30, mx=Math.max(...rr)+30;
-  const sc=v=>(v-mn)/(mx-mn);
-  poincareCtx.strokeStyle='rgba(79,195,247,0.1)';
-  poincareCtx.lineWidth=1;
-  poincareCtx.beginPath();poincareCtx.moveTo(0,h);poincareCtx.lineTo(w,0);poincareCtx.stroke();
-  for(let i=0;i<rr.length-1;i++){
-    const x=sc(rr[i])*w, y=(1-sc(rr[i+1]))*h;
-    const age=i/rr.length;
-    poincareCtx.fillStyle=`rgba(79,195,247,${0.2+age*0.8})`;
-    poincareCtx.beginPath();poincareCtx.arc(x,y,2+age*2,0,Math.PI*2);poincareCtx.fill();
+  if (!poincareCtx || !poincareCanvas) return;
+  const w = poincareCanvas.offsetWidth, h = poincareCanvas.offsetHeight;
+  if (!w || !h) return;
+  const ctx = poincareCtx;
+  ctx.clearRect(0, 0, w, h);
+
+  const rr = rrIntervals.slice(-60);
+
+  // データ不足のときは案内を出す
+  if (rr.length < 4) {
+    ctx.fillStyle = 'rgba(122,156,192,0.5)';
+    ctx.font = '13px "Noto Sans JP", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('計測するとここに表示されます', w/2, h/2);
+    ctx.textAlign = 'left';
+    return;
   }
+
+  const pad = 26;
+  const mn = Math.min(...rr) - 30, mx = Math.max(...rr) + 30;
+  const sc = v => (v - mn) / (mx - mn);
+  const px = v => pad + sc(v) * (w - pad*2);
+  const py = v => (h - pad) - sc(v) * (h - pad*2);
+
+  // グリッド
+  ctx.strokeStyle = 'rgba(79,195,247,0.07)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const gx = pad + (w - pad*2) * i/4, gy = pad + (h - pad*2) * i/4;
+    ctx.beginPath(); ctx.moveTo(gx, pad); ctx.lineTo(gx, h-pad); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(w-pad, gy); ctx.stroke();
+  }
+
+  // 枠
+  ctx.strokeStyle = 'rgba(79,195,247,0.18)';
+  ctx.strokeRect(pad, pad, w-pad*2, h-pad*2);
+
+  // 対角線（RRn = RRn+1）
+  ctx.strokeStyle = 'rgba(129,212,160,0.35)';
+  ctx.setLineDash([4,4]); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, pad); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 点（新しいほど明るく大きく）
+  for (let i = 0; i < rr.length - 1; i++) {
+    const x = px(rr[i]), y = py(rr[i+1]);
+    const age = (i + 1) / rr.length;
+    ctx.fillStyle = `rgba(79,195,247,${0.3 + age*0.7})`;
+    ctx.beginPath(); ctx.arc(x, y, 3.5 + age*2.5, 0, Math.PI*2); ctx.fill();
+    // 新しい点には枠をつける
+    if (i >= rr.length - 4) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1.2; ctx.stroke();
+    }
+  }
+
+  // 目盛り（枠の下、左右端）
+  ctx.fillStyle = 'rgba(122,156,192,0.5)';
+  ctx.font = '10px "DM Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(Math.round(mn), pad - 4, h - pad + 14);
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(mx), w - pad + 4, h - pad + 14);
+
+  // 軸ラベル
+  ctx.fillStyle = 'rgba(122,156,192,0.75)';
+  ctx.font = '11px "DM Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('RRn (ms)', w/2, h - 5);
+  ctx.textAlign = 'left';
+  ctx.save();
+  ctx.translate(12, h/2 + 34); ctx.rotate(-Math.PI/2);
+  ctx.fillText('RRn+1 (ms)', 0, 0);
+  ctx.restore();
 }
 
 // ══════════════════════════════════════
@@ -2670,7 +2753,7 @@ function goExplore() {
   mountTo('breath-section', 'slot-explore-breath');
   document.getElementById('sensor-section').style.display = 'block';
   showScreen('explore');
-  setTimeout(resizeCanvases, 80);
+  setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
 }
 
 // ── トレーニング ──
@@ -2680,7 +2763,7 @@ function goTrain() {
   document.getElementById('sensor-section').style.display = 'block';
   document.getElementById('breath-section').style.display = 'block';
   showScreen('train');
-  setTimeout(resizeCanvases, 80);
+  setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
   // カメラ未起動なら案内
   if (!capturing) {
     showToast('📷 下の「カメラを開始して計測する」で<br>センサーを起動してください', 3500);
@@ -2690,7 +2773,7 @@ function goTrain() {
 // ── 詳細データ ──
 function goDetail() {
   showScreen('detail');
-  setTimeout(resizeCanvases, 80);
+  setTimeout(() => { resizeCanvases(); redrawAll(); }, 80);
 }
 
 // ホームのトレーニングボタンに前回のペースを表示
